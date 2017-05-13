@@ -1,6 +1,5 @@
 NIMFLAGS?=-d:debug
-HEADERS=bgzf.h faidx.h hfile.h hts.h kstring.h sam.h
-# Only those are used by pbbam.
+HEADERS=bgzf.h faidx.h hfile.h hts.h kstring.h sam.h vcf.h
 MY_FASTA?=data/p_ctg.fa
 export MY_FASTA
 
