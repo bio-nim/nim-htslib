@@ -23,30 +23,27 @@
 ## FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 ## DEALINGS IN THE SOFTWARE.
 
-when not defined(HTS_BGZF_TYPEDEF):
-  const
-    HTS_BGZF_TYPEDEF* = true
+from kstring import kstring_t
+
 type
   cram_fd* {.importc: "cram_fd", header: "hts.h".} = object
-  
   hFILE* {.importc: "hFILE", header: "hts.h".} = object
-  
+  BGZF* {.importc: "BGZF", header: "hts.h".} = object
+#[  
   kstring_t* {.importc: "kstring_t", header: "hts.h".} = object
-    l* {.importc: "l".}: csize
+    L* {.importc: "l".}: csize
     m* {.importc: "m".}: csize
     s* {.importc: "s".}: cstring
-
-
-when not defined(kroundup32):
-  template kroundup32*(x: untyped): untyped =
-    (
-      dec((x))
-      (x) = (x) or (x) shr 1
-      (x) = (x) or (x) shr 2
-      (x) = (x) or (x) shr 4
-      (x) = (x) or (x) shr 8
-      (x) = (x) or (x) shr 16
-      inc((x)))
+]#
+#[
+proc kroundup32*[T](x: var T) =
+  dec(x)
+  (x) = (x) or (x) shr 1
+  (x) = (x) or (x) shr 2
+  (x) = (x) or (x) shr 4
+  (x) = (x) or (x) shr 8
+  (x) = (x) or (x) shr 16
+  inc(x)
 
 ## *
 ##  hts_expand()  - expands memory block pointed to by $ptr;
@@ -58,17 +55,19 @@ when not defined(kroundup32):
 
 template hts_expand*(type_t, n, m, `ptr`: untyped): void =
   if (n) > (m):
-  (m) = (n)
-  kroundup32(m)
-  (`ptr`) = cast[ptr type_t](realloc((`ptr`), (m) * sizeof((type_t))))
+    (m) = (n)
+    kroundup32(m)
+    (`ptr`) = cast[ptr type_t](realloc((`ptr`), (m) * sizeof((type_t))))
 
 template hts_expand0*(type_t, n, m, `ptr`: untyped): void =
   if (n) > (m):
-  var t: cint
-  (m) = (n)
-  kroundup32(m)
-  (`ptr`) = cast[ptr type_t](realloc((`ptr`), (m) * sizeof((type_t))))
-  memset((cast[ptr type_t](`ptr`)) + t, 0, sizeof((type_t) * ((m) - t)))
+    var t: cint
+    (m) = (n)
+    kroundup32(m)
+    (`ptr`) = cast[ptr type_t](realloc((`ptr`), (m) * sizeof((type_t))))
+    memset((cast[ptr type_t](`ptr`)) + t, 0, sizeof((type_t) * ((m) - t)))
+]#
+
 
 ## ***********
 ##  File I/O *
@@ -112,19 +111,19 @@ type
 ##   - line is used directly in bcftools (up to and including current develop)
 
 type
-  INNER_C_UNION_2104044963* {.importc: "no_name", header: "hts.h".} = object {.union.}
+  INNER_C_UNION_2104044963* {.union.} = object
     bgzf* {.importc: "bgzf".}: ptr BGZF
     cram* {.importc: "cram".}: ptr cram_fd
     hfile* {.importc: "hfile".}: ptr hFILE
     voidp* {.importc: "voidp".}: pointer
 
-  htsFile* {.importc: "htsFile", header: "hts.h".} = object
-    is_bin* {.importc: "is_bin".} {.bitsize: 1.}: uint32_t
-    is_write* {.importc: "is_write".} {.bitsize: 1.}: uint32_t
-    is_be* {.importc: "is_be".} {.bitsize: 1.}: uint32_t
-    is_cram* {.importc: "is_cram".} {.bitsize: 1.}: uint32_t
-    dummy* {.importc: "dummy".} {.bitsize: 28.}: uint32_t
-    lineno* {.importc: "lineno".}: int64_t
+  htsFile* {.importc: "htsFile", header: "hts.h", packed.} = object
+    is_bin* {.importc: "is_bin", bitsize: 1.}: uint32
+    is_write* {.importc: "is_write", bitsize: 1.}: uint32
+    is_be* {.importc: "is_be", bitsize: 1.}: uint32
+    is_cram* {.importc: "is_cram", bitsize: 1.}: uint32
+    dummy* {.importc: "dummy", bitsize: 28.}: uint32
+    lineno* {.importc: "lineno".}: int64
     line* {.importc: "line".}: kstring_t
     fn* {.importc: "fn".}: cstring
     fn_aux* {.importc: "fn_aux".}: cstring
@@ -263,7 +262,7 @@ proc hts_set_opt*(fp: ptr htsFile; opt: cram_option): cint {.varargs, cdecl,
     importc: "hts_set_opt", header: "hts.h".}
 proc hts_getline*(fp: ptr htsFile; delimiter: cint; str: ptr kstring_t): cint {.cdecl,
     importc: "hts_getline", header: "hts.h".}
-proc hts_readlines*(fn: cstring; _n: ptr cint): cstringArray {.cdecl,
+proc hts_readlines*(fn: cstring; n: ptr cint): cstringArray {.cdecl,
     importc: "hts_readlines", header: "hts.h".}
 ## !
 ##     @abstract       Parse comma-separated list or read list from a file
@@ -274,7 +273,7 @@ proc hts_readlines*(fn: cstring; _n: ptr cint): cstringArray {.cdecl,
 ##                     strings
 ## 
 
-proc hts_readlist*(fn: cstring; is_file: cint; _n: ptr cint): cstringArray {.cdecl,
+proc hts_readlist*(fn: cstring; is_file: cint; n: ptr cint): cstringArray {.cdecl,
     importc: "hts_readlist", header: "hts.h".}
 ## !
 ##   @abstract  Create extra threads to aid compress/decompression for this file
@@ -321,67 +320,66 @@ const
   HTS_FMT_CRAI* = 3
 
 type
-  __hts_idx_t* {.importc: "__hts_idx_t", header: "hts.h".} = object
+  hts_idx_t* {.importc: "__hts_idx_t", header: "hts.h".} = object
   
   INNER_C_STRUCT_3954569502* {.importc: "no_name", header: "hts.h".} = object
     n* {.importc: "n".}: cint
     m* {.importc: "m".}: cint
     a* {.importc: "a".}: ptr cint
 
-  hts_idx_t* = __hts_idx_t
   hts_pair64_t* {.importc: "hts_pair64_t", header: "hts.h".} = object
-    u* {.importc: "u".}: uint64_t
-    v* {.importc: "v".}: uint64_t
+    u* {.importc: "u".}: uint64
+    v* {.importc: "v".}: uint64
 
   hts_readrec_func* = proc (fp: ptr BGZF; data: pointer; r: pointer; tid: ptr cint;
                          beg: ptr cint; `end`: ptr cint): cint {.cdecl.}
   hts_itr_t* {.importc: "hts_itr_t", header: "hts.h".} = object
-    read_rest* {.importc: "read_rest".} {.bitsize: 1.}: uint32_t
-    finished* {.importc: "finished".} {.bitsize: 1.}: uint32_t
-    dummy* {.importc: "dummy".} {.bitsize: 29.}: uint32_t
+    read_rest* {.importc: "read_rest", bitsize: 1.}: uint32
+    finished* {.importc: "finished", bitsize: 1.}: uint32
+    dummy* {.importc: "dummy", bitsize: 29.}: uint32
     tid* {.importc: "tid".}: cint
     beg* {.importc: "beg".}: cint
     `end`* {.importc: "end".}: cint
     n_off* {.importc: "n_off".}: cint
     i* {.importc: "i".}: cint
-    curr_off* {.importc: "curr_off".}: uint64_t
+    curr_off* {.importc: "curr_off".}: uint64
     off* {.importc: "off".}: ptr hts_pair64_t
     readrec* {.importc: "readrec".}: ptr hts_readrec_func
     bins* {.importc: "bins".}: INNER_C_STRUCT_3954569502
 
 
-template hts_bin_first*(l: untyped): untyped =
-  (((1 shl (((l) shl 1) + (l))) - 1) div 7)
+template hts_bin_first*(v: untyped): untyped =
+  (((1 shl (((v) shl 1) + (v))) - 1) div 7)
 
-template hts_bin_parent*(l: untyped): untyped =
-  (((l) - 1) shr 3)
+template hts_bin_parent*(v: untyped): untyped =
+  (((v) - 1) shr 3)
 
-proc hts_idx_init*(n: cint; fmt: cint; offset0: uint64_t; min_shift: cint; n_lvls: cint): ptr hts_idx_t {.
+proc hts_idx_init*(n: cint; fmt: cint; offset0: uint64; min_shift: cint; n_lvls: cint): ptr hts_idx_t {.
     cdecl, importc: "hts_idx_init", header: "hts.h".}
 proc hts_idx_destroy*(idx: ptr hts_idx_t) {.cdecl, importc: "hts_idx_destroy",
                                         header: "hts.h".}
 proc hts_idx_push*(idx: ptr hts_idx_t; tid: cint; beg: cint; `end`: cint;
-                  offset: uint64_t; is_mapped: cint): cint {.cdecl,
+                  offset: uint64; is_mapped: cint): cint {.cdecl,
     importc: "hts_idx_push", header: "hts.h".}
-proc hts_idx_finish*(idx: ptr hts_idx_t; final_offset: uint64_t) {.cdecl,
+proc hts_idx_finish*(idx: ptr hts_idx_t; final_offset: uint64) {.cdecl,
     importc: "hts_idx_finish", header: "hts.h".}
 proc hts_idx_save*(idx: ptr hts_idx_t; fn: cstring; fmt: cint) {.cdecl,
     importc: "hts_idx_save", header: "hts.h".}
 proc hts_idx_load*(fn: cstring; fmt: cint): ptr hts_idx_t {.cdecl,
     importc: "hts_idx_load", header: "hts.h".}
-proc hts_idx_get_meta*(idx: ptr hts_idx_t; l_meta: ptr cint): ptr uint8_t {.cdecl,
+proc hts_idx_get_meta*(idx: ptr hts_idx_t; l_meta: ptr cint): ptr uint8 {.cdecl,
     importc: "hts_idx_get_meta", header: "hts.h".}
-proc hts_idx_set_meta*(idx: ptr hts_idx_t; l_meta: cint; meta: ptr uint8_t; is_copy: cint) {.
+proc hts_idx_set_meta*(idx: ptr hts_idx_t; l_meta: cint; meta: ptr uint8; is_copy: cint) {.
     cdecl, importc: "hts_idx_set_meta", header: "hts.h".}
-proc hts_idx_get_stat*(idx: ptr hts_idx_t; tid: cint; mapped: ptr uint64_t;
-                      unmapped: ptr uint64_t): cint {.cdecl,
+proc hts_idx_get_stat*(idx: ptr hts_idx_t; tid: cint; mapped: ptr uint64;
+                      unmapped: ptr uint64): cint {.cdecl,
     importc: "hts_idx_get_stat", header: "hts.h".}
-proc hts_idx_get_n_no_coor*(idx: ptr hts_idx_t): uint64_t {.cdecl,
+proc hts_idx_get_n_no_coor*(idx: ptr hts_idx_t): uint64 {.cdecl,
     importc: "hts_idx_get_n_no_coor", header: "hts.h".}
 proc hts_parse_reg*(s: cstring; beg: ptr cint; `end`: ptr cint): cstring {.cdecl,
     importc: "hts_parse_reg", header: "hts.h".}
 proc hts_itr_query*(idx: ptr hts_idx_t; tid: cint; beg: cint; `end`: cint;
-                   readrec: ptr hts_readrec_func): ptr hts_itr_t {.cdecl,
+                   readrec: hts_readrec_func): ptr hts_itr_t {.cdecl,
     importc: "hts_itr_query", header: "hts.h".}
 proc hts_itr_destroy*(iter: ptr hts_itr_t) {.cdecl, importc: "hts_itr_destroy",
     header: "hts.h".}
@@ -392,26 +390,25 @@ type
                            readrec: ptr hts_readrec_func): ptr hts_itr_t {.cdecl.}
 
 proc hts_itr_querys*(idx: ptr hts_idx_t; reg: cstring; getid: hts_name2id_f;
-                    hdr: pointer; itr_query: ptr hts_itr_query_func;
-                    readrec: ptr hts_readrec_func): ptr hts_itr_t {.cdecl,
+                    hdr: pointer; itr_query: hts_itr_query_func;
+                    readrec: hts_readrec_func): ptr hts_itr_t {.cdecl,
     importc: "hts_itr_querys", header: "hts.h".}
-proc hts_itr_next*(fp: ptr BGZF; iter: ptr hts_itr_t; r: pointer; data: pointer): cint {.
-    cdecl, importc: "hts_itr_next", header: "hts.h".}
+proc hts_itr_next*(fp: ptr BGZF; iter: ptr hts_itr_t; r: pointer; data: pointer): cint {.cdecl, importc: "hts_itr_next", header: "hts.h".}
 proc hts_idx_seqnames*(idx: ptr hts_idx_t; n: ptr cint; getid: hts_id2name_f;
                       hdr: pointer): cstringArray {.cdecl,
     importc: "hts_idx_seqnames", header: "hts.h".}
 ##  free only the array, not the values
 
-proc hts_reg2bin*(beg: int64_t; `end`: int64_t; min_shift: cint; n_lvls: cint): cint {.
-    inline, cdecl.} =
+proc hts_reg2bin*(beg: int64; `end`: int64; min_shift: cint; n_lvls: cint): cint {.inline, cdecl.} =
   var
     l: cint
     s: cint
     t: cint
-  dec(`end`)
+  var fin = `end`
+  dec(fin)
   l = n_lvls
   while l > 0:
-    if beg shr s == `end` shr s: return t + (beg shr s)
+    if beg shr s == fin shr s: return t + (beg shr s).cint
     dec(l)
     inc(s, 3)
     dec(t, 1 shl ((l shl 1) + l))
@@ -423,42 +420,44 @@ proc hts_bin_bot*(bin: cint; n_lvls: cint): cint {.inline, cdecl.} =
     b: cint
   l = 0
   b = bin
-  while b:
+  while b != 0:
     ##  compute the level of bin
     inc(l)
     b = hts_bin_parent(b)
-  return (bin - hts_bin_first(l)) shl (n_lvls - l) * 3
+  return ((bin - hts_bin_first(l)) shl (n_lvls - l) * 3).cint
 
 ## *************
 ##  Endianness *
 ## ************
 
-proc ed_is_big*(): cint {.inline, cdecl.} =
+proc ed_is_big*(): bool {.inline, cdecl.} =
   var one: clong
-  return not ((cast[cstring]((addr(one))))[])
+  return '\0' == ((cast[ptr char]((addr(one))))[])
 
-proc ed_swap_2*(v: uint16_t): uint16_t {.inline, cdecl.} =
-  return (uint16_t)(((v and 0x00FF00FF) shl 8) or ((v and 0xFF00FF00) shr 8))
+proc ed_swap_2*(v: uint16): uint16 {.inline, cdecl.} =
+  return (((v.uint32 and 0x00FF00FF'u32) shl 8) or ((v.uint32 and 0xFF00FF00'u32) shr 8)).uint16
 
 proc ed_swap_2p*(x: pointer): pointer {.inline, cdecl.} =
-  cast[ptr uint16_t](x)[] = ed_swap_2(cast[ptr uint16_t](x)[])
+  cast[ptr uint16](x)[] = ed_swap_2(cast[ptr uint16](x)[])
   return x
 
-proc ed_swap_4*(v: uint32_t): uint32_t {.inline, cdecl.} =
-  v = ((v and 0x0000FFFF) shl 16) or (v shr 16)
-  return ((v and 0x00FF00FF) shl 8) or ((v and 0xFF00FF00) shr 8)
+proc ed_swap_4*(vv: uint32): uint32 {.inline, cdecl.} =
+  var v = vv
+  v = ((v and 0x0000FFFF'u32) shl 16) or (v shr 16)
+  return ((v and 0x00FF00FF'u32) shl 8) or ((v and 0xFF00FF00'u32) shr 8)
 
 proc ed_swap_4p*(x: pointer): pointer {.inline, cdecl.} =
-  cast[ptr uint32_t](x)[] = ed_swap_4(cast[ptr uint32_t](x)[])
+  cast[ptr uint32](x)[] = ed_swap_4(cast[ptr uint32](x)[])
   return x
 
-proc ed_swap_8*(v: uint64_t): uint64_t {.inline, cdecl.} =
-  v = ((v and 0x00000000FFFFFFFF'i64) shl 32) or (v shr 32)
-  v = ((v and 0x0000FFFF0000FFFF'i64) shl 16) or
-      ((v and 0xFFFF0000FFFF0000'i64) shr 16)
-  return ((v and 0x00FF00FF00FF00FF'i64) shl 8) or
-      ((v and 0xFF00FF00FF00FF00'i64) shr 8)
+proc ed_swap_8*(vv: uint64): uint64 {.inline, cdecl.} =
+  var v = vv
+  v = ((v and 0x00000000FFFFFFFF'u64) shl 32) or (v shr 32)
+  v = ((v and 0x0000FFFF0000FFFF'u64) shl 16) or
+      ((v and 0xFFFF0000FFFF0000'u64) shr 16)
+  return ((v and 0x00FF00FF00FF00FF'u64) shl 8) or
+      ((v and 0xFF00FF00FF00FF00'u64) shr 8)
 
 proc ed_swap_8p*(x: pointer): pointer {.inline, cdecl.} =
-  cast[ptr uint64_t](x)[] = ed_swap_8(cast[ptr uint64_t](x)[])
+  cast[ptr uint64](x)[] = ed_swap_8(cast[ptr uint64](x)[])
   return x
