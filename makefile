@@ -5,6 +5,8 @@ MY_FASTA?=data/p_ctg.fa
 export MY_FASTA
 
 default: run-main
+cp:
+	for i in ${HEADERS}; do cp pbbam/third-party/htslib/htslib/htslib/$$i inc/; done
 header-%:
 	c2nim --header --cdecl inc/$*.h --out:$*.nim
 full-%:
