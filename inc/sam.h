@@ -167,13 +167,13 @@ typedef struct {
  3. cigar data is encoded 4 bytes per CIGAR operation.
  4. seq is nybble-encoded according to bam_nt16_table.
  */
-typedef struct {
+typedef struct __bam1_t {
     bam1_core_t core;
     int l_data, m_data;
     uint8_t *data;
-#ifndef BAM_NO_ID
+//#ifndef BAM_NO_ID
     uint64_t id;
-#endif
+//#endif
 } bam1_t;
 
 /*! @function

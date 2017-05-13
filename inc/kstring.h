@@ -1,3 +1,6 @@
+#ifdef C2NIM
+#def KS_ATTR_PRINTF(fmt, arg)
+#endif
 /* The MIT License
 
    Copyright (C) 2011 by Attractive Chaos <attractor@live.co.uk>
@@ -32,6 +35,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#ifndef C2NIM
+
 #ifndef kroundup32
 #define kroundup32(x) (--(x), (x)|=(x)>>1, (x)|=(x)>>2, (x)|=(x)>>4, (x)|=(x)>>8, (x)|=(x)>>16, ++(x))
 #endif
@@ -42,6 +47,7 @@
 #define KS_ATTR_PRINTF(fmt, arg)
 #endif
 
+#endif /* C2NIM */
 
 /* kstring_t is a simple non-opaque type whose fields are likely to be
  * used directly by user code (but see also ks_str() and ks_len() below).

@@ -45,8 +45,14 @@
   @copyright The Wellcome Trust Sanger Institute.
  */
 
+#ifndef C2NIM
 struct __faidx_t;
 typedef struct __faidx_t faidx_t;
+#else
+#@
+type faidx_t* {.importc: "faidx_t", header: "faidx.h".} = object
+@#
+#endif
 
 #ifdef __cplusplus
 extern "C" {

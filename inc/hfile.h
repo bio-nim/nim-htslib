@@ -29,7 +29,15 @@ DEALINGS IN THE SOFTWARE.  */
 
 #include <sys/types.h>
 
+#ifdef C2NIM
+#def HTS_RESULT_USED
+/*typedef struct hFILE;*/
+#mangle memcpy copyMem
+#else
+
 #include "hts_defs.h"
+
+#endif
 
 #ifdef __cplusplus
 extern "C" {
