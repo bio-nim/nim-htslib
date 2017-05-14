@@ -266,6 +266,10 @@ proc write_format_values*(fname: cstring) =
   test[1] = 47.11
   bcf_float_set_vector_end(test[2])
   bcf_update_format_float(hdr, rec, "TF".cstring, cast[ptr cfloat](addr test[0]), 4)
+  assert bcf_float_is_missing(test[0])
+  assert test[1] == 47.11
+  assert bcf_float_is_vector_end(test[2])
+  assert bcf_float_is_vector_end(test[3])
   bcf_write1(xfp.cptr, hdr, rec)
   bcf_destroy1(rec)
   bcf_hdr_destroy(hdr)
@@ -286,6 +290,9 @@ proc check_format_values*(fname: cstring) =
     assert ret == 4
     assert count >= ret
     assert bcf_float_is_missing(values[0])
+    assert values[1] == 47.11
+    assert bcf_float_is_vector_end(values[2])
+    assert bcf_float_is_vector_end(values[3])
     if ret != 4 or count < ret or not bcf_float_is_missing(values[0]) or
         values[1] != 47.11 or not bcf_float_is_vector_end(values[2]) or
         not bcf_float_is_vector_end(values[3]):

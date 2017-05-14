@@ -673,7 +673,7 @@ template bcf_update_format_int32*(hdr, line, key, values, n: untyped): untyped =
   bcf_update_format((hdr), (line), (key), (values), (n), BCF_HT_INT)
 
 template bcf_update_format_float*(hdr, line, key, values, n: untyped): untyped =
-  bcf_update_format((hdr), (line), (key), (values), (n), BCF_HT_REAL)
+  bcf_update_format((hdr), (line), (key), addr(values[0]), (n), BCF_HT_REAL)
 
 template bcf_update_format_char*(hdr, line, key, values, n: untyped): untyped =
   bcf_update_format((hdr), (line), (key), (values), (n), BCF_HT_STR)
