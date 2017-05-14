@@ -1,4 +1,4 @@
-NIMFLAGS?=-d:debug
+NIMFLAGS?=--verbosity:2
 HEADERS=bgzf.h faidx.h hfile.h hts.h kstring.h sam.h vcf.h
 MY_FASTA?=data/p_ctg.fa
 export MY_FASTA
