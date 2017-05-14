@@ -19,6 +19,10 @@ run-%: %.exe
 	./$*.exe
 %.exe: %.nim
 	nim ${NIMFLAGS} --out:$*.exe c $<
+LDFLAGS+=-Lpbbam/third-party/htslib/build/ -lhts -lz
+CFLAGS+=-g -Wall -Ipbbam/third-party/htslib/htslib
+ctest:
+	${CC} -o test-vcf-api.exe test-vcf-api.c ${CFLAGS} ${LDFLAGS}
 clean:
 	rm -rf pbbam/third-party/htslib/build/
 	git clean -Xdf .
