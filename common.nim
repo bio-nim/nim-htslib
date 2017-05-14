@@ -27,22 +27,27 @@ proc isInf*(x: float): bool =
   else:
     false
 
-# For ptr arithmetic
+# For ptr arithmetic: https://forum.nim-lang.org/t/1188#7366
 template usePtr*[T] =
-  template `+`(p: ptr T, off: Natural): ptr T =
+  template `+`(p: ptr T, off: SomeInteger): ptr T =
     cast[ptr type(p[])](cast[ByteAddress](p) +% int(off) * sizeof(p[]))
 
-  template `+=`(p: ptr T, off: Natural) =
+  template `+=`(p: ptr T, off: SomeInteger) =
     p = p + off
 
-  template `-`(p: ptr T, off: Natural): ptr T =
+  template `-`(p: ptr T, off: SomeInteger): ptr T =
     cast[ptr type(p[])](cast[ByteAddress](p) -% int(off) * sizeof(p[]))
 
-  template `-=`(p: ptr T, off: Natural) =
+  template `-=`(p: ptr T, off: SomeInteger) =
     p = p - int(off)
 
-  template `[]`(p: ptr T, off: Natural): T =
+  template `[]`(p: ptr T, off: SomeInteger): T =
     (p + int(off))[]
 
-  template `[]=`(p: ptr T, off: Natural, val: T) =
+  template `[]=`(p: ptr T, off: SomeInteger, val: T) =
     (p + off)[] = val
+
+# https://forum.nim-lang.org/t/2943
+template asarray*[T](p: pointer): auto =
+  type A {.unchecked.} = array[0..0, T]
+  cast[ptr A](p)
