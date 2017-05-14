@@ -4,6 +4,7 @@ MY_FASTA?=data/p_ctg.fa
 export MY_FASTA
 
 default: run-main
+test: run-test_vcf_api
 cp:
 	for i in ${HEADERS}; do cp pbbam/third-party/htslib/htslib/htslib/$$i inc/; done
 header-%:
