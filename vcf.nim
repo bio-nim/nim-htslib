@@ -970,25 +970,19 @@ var bcf_float_vector_end* {.importc: "bcf_float_vector_end", header: "vcf.h".}: 
 var bcf_float_missing* {.importc: "bcf_float_missing", header: "vcf.h".}: uint32
 
 proc bcf_float_set*(`ptr`: ptr cfloat; value: uint32) {.inline, cdecl.} =
-  var u: tuple[i: uint32, f: cfloat]
-  u.i = value
-  `ptr`[] = u.f
+  `ptr`[] = cast[cfloat](value)
 
 template bcf_float_set_vector_end*(x: untyped): untyped =
   bcf_float_set(addr((x)), bcf_float_vector_end)
 
-template bcf_float_set_missing*(x: untyped): untyped =
-  bcf_float_set(addr((x)), bcf_float_missing)
+template bcf_float_set_missing*(x: untyped) =
+  bcf_float_set(addr(x), bcf_float_missing)
 
 proc bcf_float_is_missing*(f: cfloat): bool {.inline.} =
-  var u: tuple[i: uint32, f: cfloat]
-  u.f = f
-  return u.i == bcf_float_missing
+  return cast[uint32](f) == bcf_float_missing
 
 proc bcf_float_is_vector_end*(f: cfloat): bool {.inline.} =
-  var u: tuple[i: uint32, f: cfloat]
-  u.f = f
-  return u.i == bcf_float_vector_end
+  return cast[uint32](f) == bcf_float_vector_end
 
 proc bcf_format_gt*(fmt: ptr bcf_fmt_t; isample: cint; str: ptr kstring.kstring_t) {.inline, cdecl.} =
   template BRANCH(type_t, missing, vector_end: untyped): void =

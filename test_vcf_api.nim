@@ -259,6 +259,10 @@ proc write_format_values*(fname: cstring) =
   ##  .. FORMAT
   var test: array[4, cfloat]
   bcf_float_set_missing(test[0])
+  echo "0:", test[0]
+  assert common.isNan(cast[cfloat](0x7F800001))
+  assert common.isNan(test[0])
+  assert cast[uint32](test[0]) == 0x7F800001
   test[1] = 47.11
   bcf_float_set_vector_end(test[2])
   bcf_update_format_float(hdr, rec, "TF".cstring, cast[ptr cfloat](addr test[0]), 4)
@@ -278,6 +282,10 @@ proc check_format_values*(fname: cstring) =
     var ret: cint = bcf_get_format_float(hdr, line, "TF", addr(values), addr(count))
     ##  NOTE the return value from bcf_get_format_float is different from
     ##  bcf_get_info_float in the sense that vector-end markers also count.
+    assert (not values.isnil)
+    assert ret == 4
+    assert count >= ret
+    assert bcf_float_is_missing(values[0])
     if ret != 4 or count < ret or not bcf_float_is_missing(values[0]) or
         values[1] != 47.11 or not bcf_float_is_vector_end(values[2]) or
         not bcf_float_is_vector_end(values[3]):
