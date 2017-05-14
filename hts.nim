@@ -26,8 +26,8 @@
 from kstring import kstring_t
 
 type
-  cram_fd* {.importc: "cram_fd", header: "hts.h".} = object
-  hFILE* {.importc: "hFILE", header: "hts.h".} = object
+  cram_fd* {.importc: "struct cram_fd", header: "hts.h".} = object
+  hFILE* {.importc: "struct hFILE", header: "hts.h".} = object
   BGZF* {.importc: "BGZF", header: "hts.h".} = object
 #[  
   kstring_t* {.importc: "kstring_t", header: "hts.h".} = object
@@ -320,7 +320,7 @@ const
   HTS_FMT_CRAI* = 3
 
 type
-  hts_idx_t* {.importc: "__hts_idx_t", header: "hts.h".} = object
+  hts_idx_t* {.importc: "struct __hts_idx_t", header: "hts.h".} = object
   
   INNER_C_STRUCT_3954569502* {.importc: "no_name", header: "hts.h".} = object
     n* {.importc: "n".}: cint

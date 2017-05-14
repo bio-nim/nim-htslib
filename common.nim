@@ -1,3 +1,6 @@
+proc throw*(msg: string) =
+    raise newException(Exception, msg)
+
 # For ptr arithmetic
 template usePtr*[T] =
   template `+`(p: ptr T, off: Natural): ptr T =

@@ -1,6 +1,6 @@
 # vim: sw=2 ts=2 sts=2 tw=80 et:
-{.passC: "-g -Wall -I./inc".}
-{.passL: "-Lpbbam/third-party/htslib/build/ -lhts -lz".}
+#{.passC: "-g -Wall -I./inc".}
+#{.passL: "-Lpbbam/third-party/htslib/build/ -lhts -lz".}
 ##   test/test-vcf-api.c -- VCF test harness.
 ## 
 ##     Copyright (C) 2013, 2014 Genome Research Ltd.
@@ -24,12 +24,10 @@
 ## LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 ## FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 ## DEALINGS IN THE SOFTWARE.
-
 from strutils import `%`
 from kstring import nil
-import common
-import hts
-import vcf
+import wrap, common, hts, vcf
+import os
 
 usePtr[int32]()
 usePtr[cfloat]()
@@ -39,7 +37,8 @@ proc free*(p: pointer) {.cdecl,
 
 proc write_bcf*(fname: cstring) =
   ##  Init
-  var fp: ptr htsFile = hts_open(fname, "wb")
+  var xfp = wrap.newXHtsFile($fname, "wb")
+  var fp: ptr htsFile = xfp.cptr #hts_open(fname, "wb")
   var hdr: ptr bcf_hdr_t = bcf_hdr_init("w")
   var rec: ptr bcf1_t = bcf_init1()
   ##  Create VCF header
@@ -159,19 +158,16 @@ proc write_bcf*(fname: cstring) =
   #free(str.s)
   bcf_destroy1(rec)
   bcf_hdr_destroy(hdr)
-  var ret: cint
-  ret = hts_close(fp)
-  if (ret != 0):
-    var msg = "hts_close($1): non-zero status $2" % [$fname, $ret]
-    raise newException(OSError, msg)
 
 proc bcf_to_vcf*(fname: cstring) =
-  var fp: ptr htsFile = hts_open(fname, "rb")
+  var xfp = wrap.newXHtsFile($fname, "rb")
+  var fp: ptr htsFile = xfp.cptr #hts_open(fname, "rb")
   var hdr: ptr bcf_hdr_t = bcf_hdr_read(fp)
   var rec: ptr bcf1_t = bcf_init1()
   var str_gz_fname = $fname & ".gz"
   var gz_fname = str_gz_fname.cstring
-  var `out`: ptr htsFile = hts_open(gz_fname, "wg")
+  var xout = wrap.newXHtsFile(str_gz_fname, "wg")
+  var `out`: ptr htsFile = xout.cptr #hts_open(gz_name, "wg")
   var hdr_out: ptr bcf_hdr_t = bcf_hdr_dup(hdr)
   bcf_hdr_remove(hdr_out, BCF_HL_STR, "unused")
   bcf_hdr_remove(hdr_out, BCF_HL_GEN, "unused")
@@ -201,31 +197,19 @@ proc bcf_to_vcf*(fname: cstring) =
   bcf_destroy1(rec)
   bcf_hdr_destroy(hdr)
   bcf_hdr_destroy(hdr_out)
-  var ret: cint = hts_close(fp)
-  if ret != 0:
-    var msg = "hts_close($1): non-zero status $2" % [$fname, $ret]
-    raise newException(OSError, msg)
-  ret = hts_close(`out`)
-  if ret != 0:
-    var msg = "hts_close($1): non-zero status $2" % [$gz_fname, $ret]
-    raise newException(OSError, msg)
-  var gz_in: ptr htsFile = hts_open(gz_fname, "r")
-  if not gz_in.isnil:
-    var msg = "Could not read: $1" % [repr(gz_fname)]
-    raise newException(OSError, msg)
+  xout[].close()
+  var xgz_in = wrap.newXHtsFile(str_gz_fname, "r")
+  var gz_in: ptr htsFile = xgz_in.cptr #hts_open(gz_fname, "r")
   var line: kstring.kstring_t = kstring.kstring_t(L:0, m:0, s:nil)
   while hts_getline(gz_in, kstring.KS_SEP_LINE, addr(line)) > 0:
     discard kstring.kputc('\x0A'.cint, addr(line))
     stdout.write(line.s, line.L)
-  ret = hts_close(gz_in)
-  if (ret != 0):
-    var msg = "hts_close($1): non-zero status $2" % [$gz_fname, $ret]
-    raise newException(OSError, msg)
   free(line.s)
   #dealloc(gz_fname)
 
 proc `iterator`*(fname: cstring) =
-  var fp: ptr htsFile = hts_open(fname, "r")
+  var xfp = wrap.newXHtsFile($fname, "r")
+  var fp: ptr htsFile = xfp.cptr #hts_open(fname, "r")
   var hdr: ptr bcf_hdr_t = bcf_hdr_read(fp)
   var idx: ptr hts_idx_t
   var iter: ptr hts_itr_t
@@ -238,14 +222,10 @@ proc `iterator`*(fname: cstring) =
   bcf_itr_destroy(iter)
   hts_idx_destroy(idx)
   bcf_hdr_destroy(hdr)
-  var ret: cint
-  ret = hts_close(fp)
-  if (ret != 0):
-    var msg = "hts_close($1): non-zero status $2" % [$fname, $ret]
-    raise newException(OSError, msg)
 
 proc test_get_info_values*(fname: cstring) =
-  var fp: ptr htsFile = hts_open(fname, "r")
+  var xfp = wrap.newXHtsFile($fname, "r")
+  var fp: ptr htsFile = xfp.cptr #hts_open(fname, "r")
   var hdr: ptr bcf_hdr_t = bcf_hdr_read(fp)
   var line: ptr bcf1_t = bcf_init()
   while bcf_read(fp, hdr, line) == 0:
@@ -254,20 +234,18 @@ proc test_get_info_values*(fname: cstring) =
     var ret: cint = bcf_get_info_float(hdr, line, "AF", addr(afs), addr(count))
     if line.pos == 14369:
       if ret != 1 or afs[0] != 0.5:
-        let msg = "AF on position 14370 should be 0.5"
-        raise newException(OSError, msg)
+        common.throw("AF on position 14370 should be 0.5")
     else:
       if ret != 2 or afs[0] != 0.333 or not bcf_float_is_missing(afs[1]):
-        let msg = "AF on position 1110696 should be 0.333, missing"
-        raise newException(OSError, msg)
+        common.throw("AF on position 1110696 should be 0.333, missing")
     free(afs) # actually, an array
   bcf_destroy(line)
   bcf_hdr_destroy(hdr)
-  discard hts_close(fp)
 
 proc write_format_values*(fname: cstring) =
   ##  Init
-  var fp: ptr htsFile = hts_open(fname, "wb")
+  var xfp = wrap.newXHtsFile($fname, "wb")
+  var fp: ptr htsFile = xfp.cptr #hts_open(fname, "wb")
   var hdr: ptr bcf_hdr_t = bcf_hdr_init("w")
   var rec: ptr bcf1_t = bcf_init1()
   ##  Create VCF header
@@ -284,20 +262,18 @@ proc write_format_values*(fname: cstring) =
   test[1] = 47.11
   bcf_float_set_vector_end(test[2])
   bcf_update_format_float(hdr, rec, "TF".cstring, cast[ptr cfloat](addr test[0]), 4)
-  bcf_write1(fp, hdr, rec)
+  bcf_write1(xfp.cptr, hdr, rec)
   bcf_destroy1(rec)
   bcf_hdr_destroy(hdr)
-  var ret: cint
-  if (ret = hts_close(fp)):
-    fprintf(stderr, "hts_close(%s): non-zero status %d\x0A", fname, ret)
-    exit(ret)
+  xfp[].close()
 
 proc check_format_values*(fname: cstring) =
-  var fp: ptr htsFile = hts_open(fname, "r")
+  var xfp = wrap.newXHtsFile($fname, "r")
+  var fp: ptr htsFile = xfp.cptr #hts_open(fname, "r")
   var hdr: ptr bcf_hdr_t = bcf_hdr_read(fp)
   var line: ptr bcf1_t = bcf_init()
   while bcf_read(fp, hdr, line) == 0:
-    var values: ptr cfloat = 0
+    var values: ptr cfloat = nil
     var count: cint = 0
     var ret: cint = bcf_get_format_float(hdr, line, "TF", addr(values), addr(count))
     ##  NOTE the return value from bcf_get_format_float is different from
@@ -305,13 +281,10 @@ proc check_format_values*(fname: cstring) =
     if ret != 4 or count < ret or not bcf_float_is_missing(values[0]) or
         values[1] != 47.11 or not bcf_float_is_vector_end(values[2]) or
         not bcf_float_is_vector_end(values[3]):
-      fprintf(stderr,
-              "bcf_get_format_float didn\'t produce the expected output.\x0A")
-      exit(- 1)
+      common.throw("bcf_get_format_float didn't produce the expected output.")
     free(values)
   bcf_destroy(line)
   bcf_hdr_destroy(hdr)
-  hts_close(fp)
 
 proc test_get_format_values*(fname: cstring) =
   write_format_values(fname)
