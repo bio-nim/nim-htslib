@@ -163,6 +163,7 @@ proc bcf_to_vcf*(fname: cstring) =
   var xfp = wrap.newXHtsFile($fname, "rb")
   var fp: ptr htsFile = xfp.cptr #hts_open(fname, "rb")
   var hdr: ptr bcf_hdr_t = bcf_hdr_read(fp)
+  assert(not hdr.isnil)
   var rec: ptr bcf1_t = bcf_init1()
   var str_gz_fname = $fname & ".gz"
   var gz_fname = str_gz_fname.cstring
@@ -259,17 +260,17 @@ proc write_format_values*(fname: cstring) =
   ##  .. FORMAT
   var test: array[4, cfloat]
   bcf_float_set_missing(test[0])
-  echo "0:", test[0]
   assert common.isNan(cast[cfloat](0x7F800001))
   assert common.isNan(test[0])
   assert cast[uint32](test[0]) == 0x7F800001
   test[1] = 47.11
   bcf_float_set_vector_end(test[2])
-  bcf_update_format_float(hdr, rec, "TF".cstring, cast[ptr cfloat](addr test[0]), 4)
+  bcf_update_format_float(hdr, rec, "TF".cstring, test, 4)
   assert bcf_float_is_missing(test[0])
-  assert test[1] == 47.11
+  let myval: cfloat = 47.11
+  assert test[1] == myval
   assert bcf_float_is_vector_end(test[2])
-  assert bcf_float_is_vector_end(test[3])
+  #assert bcf_float_is_vector_end(test[3])
   bcf_write1(xfp.cptr, hdr, rec)
   bcf_destroy1(rec)
   bcf_hdr_destroy(hdr)
@@ -290,11 +291,12 @@ proc check_format_values*(fname: cstring) =
     assert ret == 4
     assert count >= ret
     assert bcf_float_is_missing(values[0])
-    assert values[1] == 47.11
+    let myval: cfloat = 47.11
+    assert values[1] == myval
     assert bcf_float_is_vector_end(values[2])
     assert bcf_float_is_vector_end(values[3])
     if ret != 4 or count < ret or not bcf_float_is_missing(values[0]) or
-        values[1] != 47.11 or not bcf_float_is_vector_end(values[2]) or
+        values[1] != myval or not bcf_float_is_vector_end(values[2]) or
         not bcf_float_is_vector_end(values[3]):
       common.throw("bcf_get_format_float didn't produce the expected output.")
     free(values)
