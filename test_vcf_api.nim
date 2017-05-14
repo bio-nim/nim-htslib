@@ -37,9 +37,10 @@ proc free*(p: pointer) {.cdecl,
 
 proc write_bcf*(fname: cstring) =
   ##  Init
-  var xfp = wrap.newXHtsFile($fname, "wb")
+  var xfp = wrap.initXHtsFile($fname, "wb")
   var fp: ptr htsFile = xfp.cptr #hts_open(fname, "wb")
   var hdr: ptr bcf_hdr_t = bcf_hdr_init("w")
+  assert(not hdr.isnil)
   var rec: ptr bcf1_t = bcf_init1()
   ##  Create VCF header
   #var str: kstring_t = kstring_t(L:0, m:0, s:nil)
@@ -160,14 +161,14 @@ proc write_bcf*(fname: cstring) =
   bcf_hdr_destroy(hdr)
 
 proc bcf_to_vcf*(fname: cstring) =
-  var xfp = wrap.newXHtsFile($fname, "rb")
+  var xfp = wrap.initXHtsFile($fname, "rb")
   var fp: ptr htsFile = xfp.cptr #hts_open(fname, "rb")
   var hdr: ptr bcf_hdr_t = bcf_hdr_read(fp)
   assert(not hdr.isnil)
   var rec: ptr bcf1_t = bcf_init1()
   var str_gz_fname = $fname & ".gz"
   var gz_fname = str_gz_fname.cstring
-  var xout = wrap.newXHtsFile(str_gz_fname, "wg")
+  var xout = wrap.initXHtsFile(str_gz_fname, "wg")
   var `out`: ptr htsFile = xout.cptr #hts_open(gz_name, "wg")
   var hdr_out: ptr bcf_hdr_t = bcf_hdr_dup(hdr)
   bcf_hdr_remove(hdr_out, BCF_HL_STR, "unused")
@@ -198,8 +199,8 @@ proc bcf_to_vcf*(fname: cstring) =
   bcf_destroy1(rec)
   bcf_hdr_destroy(hdr)
   bcf_hdr_destroy(hdr_out)
-  xout[].close()
-  var xgz_in = wrap.newXHtsFile(str_gz_fname, "r")
+  xout.close()
+  var xgz_in = wrap.initXHtsFile(str_gz_fname, "r")
   var gz_in: ptr htsFile = xgz_in.cptr #hts_open(gz_fname, "r")
   var line: kstring.kstring_t = kstring.kstring_t(L:0, m:0, s:nil)
   while hts_getline(gz_in, kstring.KS_SEP_LINE, addr(line)) > 0:
@@ -209,7 +210,7 @@ proc bcf_to_vcf*(fname: cstring) =
   #dealloc(gz_fname)
 
 proc `iterator`*(fname: cstring) =
-  var xfp = wrap.newXHtsFile($fname, "r")
+  var xfp = wrap.initXHtsFile($fname, "r")
   var fp: ptr htsFile = xfp.cptr #hts_open(fname, "r")
   var hdr: ptr bcf_hdr_t = bcf_hdr_read(fp)
   var idx: ptr hts_idx_t
@@ -225,7 +226,7 @@ proc `iterator`*(fname: cstring) =
   bcf_hdr_destroy(hdr)
 
 proc test_get_info_values*(fname: cstring) =
-  var xfp = wrap.newXHtsFile($fname, "r")
+  var xfp = wrap.initXHtsFile($fname, "r")
   var fp: ptr htsFile = xfp.cptr #hts_open(fname, "r")
   var hdr: ptr bcf_hdr_t = bcf_hdr_read(fp)
   var line: ptr bcf1_t = bcf_init()
@@ -234,18 +235,20 @@ proc test_get_info_values*(fname: cstring) =
     var count: cint = 0
     var ret: cint = bcf_get_info_float(hdr, line, "AF", addr(afs), addr(count))
     if line.pos == 14369:
-      if ret != 1 or afs[0] != 0.5:
-        common.throw("AF on position 14370 should be 0.5")
+      assert ret == 1
+      assert afs[0] == 0.5
     else:
-      if ret != 2 or afs[0] != 0.333 or not bcf_float_is_missing(afs[1]):
-        common.throw("AF on position 1110696 should be 0.333, missing")
+      assert ret == 2
+      let myval: cfloat = 0.333
+      assert afs[0] == myval
+      assert bcf_float_is_missing(afs[1])
     free(afs) # actually, an array
   bcf_destroy(line)
   bcf_hdr_destroy(hdr)
 
 proc write_format_values*(fname: cstring) =
   ##  Init
-  var xfp = wrap.newXHtsFile($fname, "wb")
+  var xfp = wrap.initXHtsFile($fname, "wb")
   var fp: ptr htsFile = xfp.cptr #hts_open(fname, "wb")
   var hdr: ptr bcf_hdr_t = bcf_hdr_init("w")
   var rec: ptr bcf1_t = bcf_init1()
@@ -274,10 +277,9 @@ proc write_format_values*(fname: cstring) =
   bcf_write1(xfp.cptr, hdr, rec)
   bcf_destroy1(rec)
   bcf_hdr_destroy(hdr)
-  xfp[].close()
 
 proc check_format_values*(fname: cstring) =
-  var xfp = wrap.newXHtsFile($fname, "r")
+  var xfp = wrap.initXHtsFile($fname, "r")
   var fp: ptr htsFile = xfp.cptr #hts_open(fname, "r")
   var hdr: ptr bcf_hdr_t = bcf_hdr_read(fp)
   var line: ptr bcf1_t = bcf_init()

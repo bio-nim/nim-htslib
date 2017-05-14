@@ -12,15 +12,20 @@ type
 
 converter toPHtsFile(x: XHtsFile): ptr hts.htsFile = x.cptr
 
-proc newXHtsFile*(fname: string, mode: string): ref XHtsFile =
-  new(result)
-  result.fname = fname
-  result.cptr = hts.hts_open(fname, mode)
-  if result.cptr.isnil:
+proc initXHtsFile*(fname: string, mode: string): XHtsFile =
+  let cptr = hts.hts_open(fname, mode)
+  if cptr.isnil:
     let msg = "Could not hts_open($1, $2)" % [repr(fname), repr(mode)]
     common.throw(msg)
+  #echo "Opened ", fname, " for mode=", mode
+  return XHtsFile(fname: fname, cptr:cptr)
+
+proc newXHtsFile*(fname: string, mode: string): ref XHtsFile =
+  new(result)
+  result[] = initXHtsFile(fname, mode)
 
 proc close*(x: var XHtsFile) =
+  #echo "Closing ", x.fname
   let ret = hts.hts_close(x.cptr)
   x.cptr = nil
   if ret != 0:
@@ -28,5 +33,6 @@ proc close*(x: var XHtsFile) =
     common.throw(msg)
 
 proc `=destroy`*(x: var XHtsFile) =
+  #echo "In dtor--------"
   if not x.cptr.isnil:
     x.close()
