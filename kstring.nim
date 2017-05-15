@@ -1,7 +1,7 @@
 ##  The MIT License
-## 
+##
 ##    Copyright (C) 2011 by Attractive Chaos <attractor@live.co.uk>
-## 
+##
 ##    Permission is hereby granted, free of charge, to any person obtaining
 ##    a copy of this software and associated documentation files (the
 ##    "Software"), to deal in the Software without restriction, including
@@ -9,10 +9,10 @@
 ##    distribute, sublicense, and/or sell copies of the Software, and to
 ##    permit persons to whom the Software is furnished to do so, subject to
 ##    the following conditions:
-## 
+##
 ##    The above copyright notice and this permission notice shall be
 ##    included in all copies or substantial portions of the Software.
-## 
+##
 ##    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 ##    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 ##    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -21,7 +21,7 @@
 ##    ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 ##    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ##    SOFTWARE.
-## 
+##
 
 ##  kstring_t is a simple non-opaque type whose fields are likely to be
 ##  used directly by user code (but see also ks_str() and ks_len() below).
@@ -49,7 +49,7 @@ type
     sep* {.importc: "sep".}: cint
     finished* {.importc: "finished".}: cint
     p* {.importc: "p".}: cstring ##  end of the current token
-  
+
 proc kroundup32*[T](x: var T) =
   dec(x)
   (x) = (x) or (x) shr 1
@@ -254,10 +254,10 @@ proc kputl*(c: clong; s: ptr kstring_t): cint {.inline, cdecl.} =
   s.s[s.L] = '\0'
   return 0
 
-## 
+##
 ##  Returns 's' split by delimiter, with *n being the number of components;
 ##          NULL on failue.
-## 
+##
 
 proc ksplit*(s: ptr kstring_t; delimiter: cint; n: ptr cint): ptr cint {.inline, cdecl.} =
   var

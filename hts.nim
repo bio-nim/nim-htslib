@@ -1,20 +1,20 @@
 ##   hts.h -- format-neutral I/O, indexing, and iterator API functions.
-## 
+##
 ##     Copyright (C) 2012-2014 Genome Research Ltd.
 ##     Copyright (C) 2012 Broad Institute.
-## 
+##
 ##     Author: Heng Li <lh3@sanger.ac.uk>
-## 
+##
 ## Permission is hereby granted, free of charge, to any person obtaining a copy
 ## of this software and associated documentation files (the "Software"), to deal
 ## in the Software without restriction, including without limitation the rights
 ## to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 ## copies of the Software, and to permit persons to whom the Software is
 ## furnished to do so, subject to the following conditions:
-## 
+##
 ## The above copyright notice and this permission notice shall be included in
 ## all copies or substantial portions of the Software.
-## 
+##
 ## THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 ## IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 ## FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -29,7 +29,7 @@ type
   cram_fd* {.importc: "struct cram_fd", header: "hts.h".} = object
   hFILE* {.importc: "struct hFILE", header: "hts.h".} = object
   BGZF* {.importc: "BGZF", header: "hts.h".} = object
-#[  
+#[
   kstring_t* {.importc: "kstring_t", header: "hts.h".} = object
     L* {.importc: "l".}: csize
     m* {.importc: "m".}: csize
@@ -48,10 +48,10 @@ proc kroundup32*[T](x: var T) =
 ## *
 ##  hts_expand()  - expands memory block pointed to by $ptr;
 ##  hts_expand0()   the latter sets the newly allocated part to 0.
-## 
+##
 ##  @param n     requested number of elements of type type_t
 ##  @param m     size of memory allocated
-## 
+##
 
 template hts_expand*(type_t, n, m, `ptr`: untyped): void =
   if (n) > (m):
@@ -162,19 +162,19 @@ var hts_verbose* {.importc: "hts_verbose", header: "hts.h".}: cint
 ## The input character may be either an IUPAC ambiguity code, '=' for 0, or
 ## '0'/'1'/'2'/'3' for a result of 1/2/4/8.  The result is encoded as 1/2/4/8
 ## for A/C/G/T or combinations of these bits for ambiguous bases.
-## 
+##
 
 var seq_nt16_table* {.importc: "seq_nt16_table", header: "hts.h".}: array[256, cuchar]
 
 ## ! @abstract Table for converting a 4-bit encoded nucleotide to an IUPAC
 ## ambiguity code letter (or '=' when given 0).
-## 
+##
 
 var seq_nt16_str* {.importc: "seq_nt16_str", header: "hts.h".}: ptr char
 
 ## ! @abstract Table for converting a 4-bit encoded nucleotide to about 2 bits.
 ## Returns 0/1/2/3 for 1/2/4/8 (i.e., A/C/G/T), or 4 otherwise (0 or ambiguous).
-## 
+##
 
 var seq_nt16_int* {.importc: "seq_nt16_int", header: "hts.h".}: ptr cint
 
@@ -182,7 +182,7 @@ var seq_nt16_int* {.importc: "seq_nt16_int", header: "hts.h".}: ptr cint
 ##   @abstract  Get the htslib version number
 ##   @return    For released versions, a string like "N.N[.N]"; or git describe
 ##   output if using a library built within a Git repository.
-## 
+##
 
 proc hts_version*(): cstring {.cdecl, importc: "hts_version", header: "hts.h".}
 ## !
@@ -190,13 +190,13 @@ proc hts_version*(): cstring {.cdecl, importc: "hts_version", header: "hts.h".}
 ##   @param fp    File opened for reading, positioned at the beginning
 ##   @param fmt   Format structure that will be filled out on return
 ##   @return      0 for success, or negative if an error occurred.
-## 
+##
 
 proc hts_detect_format*(fp: ptr hFILE; fmt: ptr htsFormat): cint {.cdecl,
     importc: "hts_detect_format", header: "hts.h".}
 ## !
 ##   @abstract    Get a human-readable description of the file format
-## 
+##
 
 proc hts_format_description*(format: ptr htsFormat): cstring {.cdecl,
     importc: "hts_format_description", header: "hts.h".}
@@ -223,7 +223,7 @@ proc hts_format_description*(format: ptr htsFormat): cstring {.cdecl,
 ##       [rw]u .. uncompressed BCF
 ##       [rw]z .. compressed VCF
 ##       [rw]  .. uncompressed VCF
-## 
+##
 
 proc hts_open*(fn: cstring; mode: cstring): ptr htsFile {.cdecl, importc: "hts_open",
     header: "hts.h".}
@@ -231,7 +231,7 @@ proc hts_open*(fn: cstring; mode: cstring): ptr htsFile {.cdecl, importc: "hts_o
 ##   @abstract       Open an existing stream as a SAM/BAM/CRAM/VCF/BCF/etc file
 ##   @param fn       The already-open file handle
 ##   @param mode     Open mode, as per hts_open()
-## 
+##
 
 proc hts_hopen*(fp: ptr hFILE; fn: cstring; mode: cstring): ptr htsFile {.cdecl,
     importc: "hts_hopen", header: "hts.h".}
@@ -239,14 +239,14 @@ proc hts_hopen*(fp: ptr hFILE; fn: cstring; mode: cstring): ptr htsFile {.cdecl,
 ##   @abstract  Close a file handle, flushing buffered data for output streams
 ##   @param fp  The file handle to be closed
 ##   @return    0 for success, or negative if an error occurred.
-## 
+##
 
 proc hts_close*(fp: ptr htsFile): cint {.cdecl, importc: "hts_close", header: "hts.h".}
 ## !
 ##   @abstract  Returns the file's format information
 ##   @param fp  The file handle
 ##   @return    Read-only pointer to the file's htsFormat.
-## 
+##
 
 proc hts_get_format*(fp: ptr htsFile): ptr htsFormat {.cdecl,
     importc: "hts_get_format", header: "hts.h".}
@@ -256,7 +256,7 @@ proc hts_get_format*(fp: ptr htsFile): ptr htsFormat {.cdecl,
 ##   @param opt The CRAM_OPT_* option.
 ##   @param ... Optional arguments, dependent on the option used.
 ##   @return    0 for success, or negative if an error occurred.
-## 
+##
 
 proc hts_set_opt*(fp: ptr htsFile; opt: cram_option): cint {.varargs, cdecl,
     importc: "hts_set_opt", header: "hts.h".}
@@ -271,7 +271,7 @@ proc hts_readlines*(fn: cstring; n: ptr cint): cstringArray {.cdecl,
 ##     @param _n       Size of the output array (number of items read)
 ##     @return         NULL on failure or pointer to newly allocated array of
 ##                     strings
-## 
+##
 
 proc hts_readlist*(fn: cstring; is_file: cint; n: ptr cint): cstringArray {.cdecl,
     importc: "hts_readlist", header: "hts.h".}
@@ -281,7 +281,7 @@ proc hts_readlist*(fn: cstring; is_file: cint; n: ptr cint): cstringArray {.cdec
 ##   @param n   The number of worker threads to create
 ##   @return    0 for success, or negative if an error occurred.
 ##   @notes     THIS THREADING API IS LIKELY TO CHANGE IN FUTURE.
-## 
+##
 
 proc hts_set_threads*(fp: ptr htsFile; n: cint): cint {.cdecl,
     importc: "hts_set_threads", header: "hts.h".}
@@ -291,7 +291,7 @@ proc hts_set_threads*(fp: ptr htsFile; n: cint): cint {.cdecl,
 ##   @discussion
 ##       Called before *_hdr_read(), this provides the name of a .fai file
 ##       used to provide a reference list if the htsFile contains no @SQ headers.
-## 
+##
 
 proc hts_set_fai_filename*(fp: ptr htsFile; fn_aux: cstring): cint {.cdecl,
     importc: "hts_set_fai_filename", header: "hts.h".}
@@ -307,7 +307,7 @@ proc hts_set_fai_filename*(fp: ptr htsFile; fn_aux: cstring): cint {.cdecl,
 ##  - HTS_IDX_NONE   always returns "no more alignment records"
 ## When one of these special tid values is used, beg and end are ignored.
 ## When REST or NONE is used, idx is also ignored and may be NULL.
-## 
+##
 
 const
   HTS_IDX_NOCOOR* = (- 2)
@@ -321,7 +321,7 @@ const
 
 type
   hts_idx_t* {.importc: "struct __hts_idx_t", header: "hts.h".} = object
-  
+
   INNER_C_STRUCT_3954569502* {.importc: "no_name", header: "hts.h".} = object
     n* {.importc: "n".}: cint
     m* {.importc: "m".}: cint

@@ -1,20 +1,20 @@
 ##   sam.h -- SAM and BAM file I/O and manipulation.
-## 
+##
 ##     Copyright (C) 2008, 2009, 2013-2014 Genome Research Ltd.
 ##     Copyright (C) 2010, 2012, 2013 Broad Institute.
-## 
+##
 ##     Author: Heng Li <lh3@sanger.ac.uk>
-## 
+##
 ## Permission is hereby granted, free of charge, to any person obtaining a copy
 ## of this software and associated documentation files (the "Software"), to deal
 ## in the Software without restriction, including without limitation the rights
 ## to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 ## copies of the Software, and to permit persons to whom the Software is
 ## furnished to do so, subject to the following conditions:
-## 
+##
 ## The above copyright notice and this permission notice shall be included in
 ## all copies or substantial portions of the Software.
-## 
+##
 ## THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 ## IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 ## FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -37,7 +37,7 @@ import
 ##  @field target_name names of the reference sequences
 ##  @field text        plain text
 ##  @field sdict       header dictionary
-## 
+##
 
 type
   bam_hdr_t* {.importc: "bam_hdr_t", header: "sam.h".} = object
@@ -86,7 +86,7 @@ template bam_cigar_gen*(l, o: untyped): untyped =
 ##  bam_cigar_type returns a bit flag with:
 ##    bit 1 set if the cigar operation consumes the query
 ##    bit 2 set if the cigar operation consumes the reference
-## 
+##
 ##  For reference, the unobfuscated truth table for this function is:
 ##  BAM_CIGAR_TYPE  QUERY  REFERENCE
 ##  --------------------------------
@@ -101,11 +101,11 @@ template bam_cigar_gen*(l, o: untyped): untyped =
 ##  BAM_CDIFF       1      1
 ##  BAM_CBACK       0      0
 ##  --------------------------------
-## 
+##
 
 template bam_cigar_type*(o: untyped): untyped =
   (BAM_CIGAR_TYPE shr ((o) shl 1) and 3) ##  bit 1: consume query; bit 2: consume reference
-  
+
 ## ! @abstract the read is paired in sequencing, no matter whether it is mapped in a pair
 
 const
@@ -181,7 +181,7 @@ const
 ##  @field  l_qseq  length of the query sequence (read)
 ##  @field  mtid    chromosome ID of next read in template, defined by bam_hdr_t
 ##  @field  mpos    0-based leftmost coordinate of next read in template
-## 
+##
 
 type
   bam1_core_t* {.importc: "bam1_core_t", header: "sam.h".} = object
@@ -204,15 +204,15 @@ type
 ##  @field  l_data     current length of bam1_t::data
 ##  @field  m_data     maximum length of bam1_t::data
 ##  @field  data       all variable-length data, concatenated; structure: qname-cigar-seq-qual-aux
-## 
+##
 ##  @discussion Notes:
-## 
+##
 ##  1. qname is zero tailing and core.l_qname includes the tailing '\0'.
 ##  2. l_qseq is calculated from the total length of an alignment block
 ##  on reading or from CIGAR.
 ##  3. cigar data is encoded 4 bytes per CIGAR operation.
 ##  4. seq is nybble-encoded according to bam_nt16_table.
-## 
+##
 
 type
   bam1_t* {.importc: "bam1_t", header: "sam.h".} = object
@@ -221,13 +221,13 @@ type
     m_data* {.importc: "m_data".}: cint
     data* {.importc: "data".}: ptr uint8_t
     id* {.importc: "id".}: uint64_t # unless BAM_NO_ID
-  
+
 
 ## ! @function
 ##  @abstract  Get whether the query is on the reverse strand
 ##  @param  b  pointer to an alignment
 ##  @return    boolean true if query is on the reverse strand
-## 
+##
 
 template bam_is_rev*(b: untyped): untyped =
   (((b).core.flag and BAM_FREVERSE) != 0)
@@ -236,7 +236,7 @@ template bam_is_rev*(b: untyped): untyped =
 ##  @abstract  Get whether the query's mate is on the reverse strand
 ##  @param  b  pointer to an alignment
 ##  @return    boolean true if query's mate on the reverse strand
-## 
+##
 
 template bam_is_mrev*(b: untyped): untyped =
   (((b).core.flag and BAM_FMREVERSE) != 0)
@@ -245,7 +245,7 @@ template bam_is_mrev*(b: untyped): untyped =
 ##  @abstract  Get the name of the query
 ##  @param  b  pointer to an alignment
 ##  @return    pointer to the name string, null terminated
-## 
+##
 
 template bam_get_qname*(b: untyped): untyped =
   (cast[cstring]((b).data))
@@ -254,11 +254,11 @@ template bam_get_qname*(b: untyped): untyped =
 ##  @abstract  Get the CIGAR array
 ##  @param  b  pointer to an alignment
 ##  @return    pointer to the CIGAR array
-## 
+##
 ##  @discussion In the CIGAR array, each element is a 32-bit integer. The
 ##  lower 4 bits gives a CIGAR operation and the higher 28 bits keep the
 ##  length of a CIGAR.
-## 
+##
 
 template bam_get_cigar*(b: untyped): untyped =
   (cast[ptr uint32_t](((b).data + (b).core.l_qname)))
@@ -267,12 +267,12 @@ template bam_get_cigar*(b: untyped): untyped =
 ##  @abstract  Get query sequence
 ##  @param  b  pointer to an alignment
 ##  @return    pointer to sequence
-## 
+##
 ##  @discussion Each base is encoded in 4 bits: 1 for A, 2 for C, 4 for G,
 ##  8 for T and 15 for N. Two bases are packed in one byte with the base
 ##  at the higher 4 bits having smaller coordinate on the read. It is
 ##  recommended to use bam_seqi() macro to get the base.
-## 
+##
 
 template bam_get_seq*(b: untyped): untyped =
   ((b).data + ((b).core.n_cigar shl 2) + (b).core.l_qname)
@@ -281,7 +281,7 @@ template bam_get_seq*(b: untyped): untyped =
 ##  @abstract  Get query quality
 ##  @param  b  pointer to an alignment
 ##  @return    pointer to quality string
-## 
+##
 
 template bam_get_qual*(b: untyped): untyped =
   ((b).data + ((b).core.n_cigar shl 2) + (b).core.l_qname +
@@ -291,7 +291,7 @@ template bam_get_qual*(b: untyped): untyped =
 ##  @abstract  Get auxiliary data
 ##  @param  b  pointer to an alignment
 ##  @return    pointer to the concatenated auxiliary data
-## 
+##
 
 template bam_get_aux*(b: untyped): untyped =
   ((b).data + ((b).core.n_cigar shl 2) + (b).core.l_qname +
@@ -301,7 +301,7 @@ template bam_get_aux*(b: untyped): untyped =
 ##  @abstract  Get length of auxiliary data
 ##  @param  b  pointer to an alignment
 ##  @return    length of the concatenated auxiliary data
-## 
+##
 
 template bam_get_l_aux*(b: untyped): untyped =
   ((b).l_data - ((b).core.n_cigar shl 2) - (b).core.l_qname - (b).core.l_qseq -
@@ -312,7 +312,7 @@ template bam_get_l_aux*(b: untyped): untyped =
 ##  @param  s  Query sequence returned by bam1_seq()
 ##  @param  i  The i-th position, 0-based
 ##  @return    4-bit integer representing the base.
-## 
+##
 
 template bam_seqi*(s, i: untyped): untyped =
   ((s)[(i) shr 1] shr ((not (i) and 1) shl 2) and 0x0000000F)
@@ -353,14 +353,14 @@ proc bam_cigar2rlen*(n_cigar: cint; cigar: ptr uint32_t): cint {.cdecl,
 ## !
 ##       @abstract Calculate the rightmost base position of an alignment on the
 ##       reference genome.
-## 
+##
 ##       @param  b  pointer to an alignment
 ##       @return    the coordinate of the first base after the alignment, 0-based
-## 
+##
 ##       @discussion For a mapped read, this is just b->core.pos + bam_cigar2rlen.
 ##       For an unmapped read (either according to its flags or if it has no cigar
 ##       string), we return b->core.pos + 1 by convention.
-## 
+##
 
 proc bam_endpos*(b: ptr bam1_t): int32_t {.cdecl, importc: "bam_endpos", header: "sam.h".}
 proc bam_str2flag*(str: cstring): cint {.cdecl, importc: "bam_str2flag",
@@ -469,13 +469,13 @@ when not defined(BAM_NO_PILEUP):
   ##  @field  is_tail    ???
   ##  @field  is_refskip ???
   ##  @field  aux        ???
-  ## 
+  ##
   ##  @discussion See also bam_plbuf_push() and bam_lplbuf_push(). The
   ##  difference between the two functions is that the former does not
   ##  set bam_pileup1_t::level, while the later does. Level helps the
   ##  implementation of alignment viewers, but calculating this has some
   ##  overhead.
-  ## 
+  ##
   type
     bam_pileup1_t* {.importc: "bam_pileup1_t", header: "sam.h".} = object
       b* {.importc: "b".}: ptr bam1_t
@@ -491,12 +491,12 @@ when not defined(BAM_NO_PILEUP):
     bam_plp_auto_f* = proc (data: pointer; b: ptr bam1_t): cint {.cdecl.}
   type
     __bam_plp_t* {.importc: "__bam_plp_t", header: "sam.h".} = object
-    
+
   type
     bam_plp_t* = ptr __bam_plp_t
   type
     __bam_mplp_t* {.importc: "__bam_mplp_t", header: "sam.h".} = object
-    
+
   type
     bam_mplp_t* = ptr __bam_mplp_t
   ## *
@@ -504,7 +504,7 @@ when not defined(BAM_NO_PILEUP):
   ##   @func:      see mplp_func in bam_plcmd.c in samtools for an example. Expected return
   ##               status: 0 on success, -1 on end, < -1 on non-recoverable errors
   ##   @data:      user data to pass to @func
-  ## 
+  ##
   proc bam_plp_init*(`func`: bam_plp_auto_f; data: pointer): bam_plp_t {.cdecl,
       importc: "bam_plp_init", header: "sam.h".}
   proc bam_plp_destroy*(iter: bam_plp_t) {.cdecl, importc: "bam_plp_destroy",
@@ -528,7 +528,7 @@ when not defined(BAM_NO_PILEUP):
   ##   calling. If the two bases are identical, the quality of the other base
   ##   is increased to the sum of their qualities (capped at 200), otherwise
   ##   it is multiplied by 0.8.
-  ## 
+  ##
   proc bam_mplp_init_overlaps*(iter: bam_mplp_t) {.cdecl,
       importc: "bam_mplp_init_overlaps", header: "sam.h".}
   proc bam_mplp_destroy*(iter: bam_mplp_t) {.cdecl, importc: "bam_mplp_destroy",

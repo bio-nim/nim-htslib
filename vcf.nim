@@ -1,20 +1,20 @@
 ##   vcf.h -- VCF/BCF API functions.
-## 
+##
 ##     Copyright (C) 2012, 2013 Broad Institute.
 ##     Copyright (C) 2012-2014 Genome Research Ltd.
-## 
+##
 ##     Author: Heng Li <lh3@sanger.ac.uk>
-## 
+##
 ## Permission is hereby granted, free of charge, to any person obtaining a copy
 ## of this software and associated documentation files (the "Software"), to deal
 ## in the Software without restriction, including without limitation the rights
 ## to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 ## copies of the Software, and to permit persons to whom the Software is
 ## furnished to do so, subject to the following conditions:
-## 
+##
 ## The above copyright notice and this permission notice shall be included in
 ## all copies or substantial portions of the Software.
-## 
+##
 ## THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 ## IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 ## FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -22,11 +22,11 @@
 ## LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 ## FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 ## DEALINGS IN THE SOFTWARE.
-## 
+##
 ##     todo:
 ##         - make the function names consistent
 ##         - provide calls to abstract away structs as much as possible
-## 
+##
 
 from strutils import `%`
 import
@@ -54,7 +54,7 @@ const
   BCF_VL_R* = 4
 
 ##  === Dictionary ===
-## 
+##
 ##    The header keeps three dictonaries. The first keeps IDs in the
 ##    "FILTER/INFO/FORMAT" lines, the second keeps the sequence names and lengths
 ##    in the "contig" lines and the last keeps the sample names. bcf_hdr_t::dict[]
@@ -63,7 +63,7 @@ const
 ##    bcf_idinfo_t struct. bcf_hdr_t::id[] points to key-value pairs in the hash
 ##    table in the order that they appear in the VCF header. bcf_hdr_t::n[] is the
 ##    size of the hash table or, equivalently, the length of the id[] arrays.
-## 
+##
 
 const
   BCF_DT_ID* = 0
@@ -80,7 +80,7 @@ type
     nkeys* {.importc: "nkeys".}: cint ##  Number of structured fields
     keys* {.importc: "keys".}: cstringArray
     vals* {.importc: "vals".}: cstringArray ##  The key=value pairs
-  
+
   bcf_idinfo_t* {.importc: "bcf_idinfo_t", header: "vcf.h".} = object
     info* {.importc: "info".}: array[3, uint32] ##  stores Number:20, var:4, Type:4, ColType:4 for BCF_HL_FLT,INFO,FMT
     hrec* {.importc: "hrec".}: array[3, ptr bcf_hrec_t]
@@ -128,11 +128,11 @@ type
   INNER_C_UNION_988133268* {.importc: "no_name", header: "vcf.h".} = object {.union.}
     i* {.importc: "i".}: int32 ##  integer value
     f* {.importc: "f".}: cfloat  ##  float value
-  
+
   variant_t* {.importc: "variant_t", header: "vcf.h".} = object
     `type`* {.importc: "type".}: cint
     n* {.importc: "n".}: cint    ##  variant type and the number of bases affected, negative for deletions
-  
+
   bcf_fmt_t* {.importc: "bcf_fmt_t", header: "vcf.h".} = object
     id* {.importc: "id".}: cint  ##  id: numeric tag id, the corresponding string is bcf_hdr_t::id[BCF_DT_ID][$id].key
     n* {.importc: "n".}: cint
@@ -153,7 +153,7 @@ type
     vptr_off* {.importc: "vptr_off", bitsize: 31.}: uint32 ##  vptr offset, i.e., the size of the INFO key plus size+type bytes
     vptr_free* {.importc: "vptr_free", bitsize: 1.}: uint32 ##  indicates that vptr-vptr_off must be freed; set only when modified and the new
                                                            ##     data block is bigger than the original
-  
+
 
 const
   BCF1_DIRTY_ID* = 1
@@ -181,14 +181,14 @@ type
     var_type* {.importc: "var_type".}: cint
     shared_dirty* {.importc: "shared_dirty".}: cint ##  if set, shared.s must be recreated on BCF output
     indiv_dirty* {.importc: "indiv_dirty".}: cint ##  if set, indiv.s must be recreated on BCF output
-  
+
 
 const
   BCF_ERR_CTG_UNDEF* = 1
   BCF_ERR_TAG_UNDEF* = 2
   BCF_ERR_NCOLS* = 4
 
-## 
+##
 ##     The bcf1_t structure corresponds to one VCF/BCF line. Reading from VCF file
 ##     is slower because the string is first to be parsed, packed into BCF line
 ##     (done in vcf_parse), then unpacked into internal bcf1_t structure. If it
@@ -198,7 +198,7 @@ const
 ##     Similarly, it is fast to output a BCF line because the columns (kept in
 ##     shared.s, indiv.s, etc.) are written directly by bcf_write, whereas a VCF
 ##     line must be formatted in vcf_format.
-## 
+##
 
 type
   bcf1_t* {.importc: "bcf1_t", header: "vcf.h".} = object
@@ -234,14 +234,14 @@ usePtr[uint8]()
 
 ## **********************************************************************
 ##   BCF and VCF I/O
-## 
+##
 ##   A note about naming conventions: htslib internally represents VCF
 ##   records as bcf1_t data structures, therefore most functions are
 ##   prefixed with bcf_. There are a few exceptions where the functions must
 ##   be aware of both BCF and VCF worlds, such as bcf_parse vs vcf_parse. In
 ##   these cases, functions prefixed with bcf_ are more general and work
 ##   with both BCF and VCF.
-## 
+##
 ## *********************************************************************
 ## * These macros are defined only for consistency with other parts of htslib
 
@@ -275,10 +275,10 @@ template vcf_format1*(h, v, s: untyped): untyped =
 ## *
 ##   bcf_hdr_init() - create an empty BCF header.
 ##   @param mode    "r" or "w"
-## 
+##
 ##   When opened for writing, the mandatory fileFormat and
 ##   FILTER=PASS lines are added automatically.
-## 
+##
 
 proc bcf_hdr_init*(mode: cstring): ptr bcf_hdr_t {.cdecl, importc: "bcf_hdr_init",
     header: "vcf.h".}
@@ -295,14 +295,14 @@ proc bcf_destroy*(v: ptr bcf1_t) {.cdecl, importc: "bcf_destroy", header: "vcf.h
 ## *
 ##   Same as bcf_destroy() but frees only the memory allocated by bcf1_t,
 ##   not the bcf1_t object itself.
-## 
+##
 
 proc bcf_empty*(v: ptr bcf1_t) {.cdecl, importc: "bcf_empty", header: "vcf.h".}
 ## *
 ##   Make the bcf1_t object ready for next read. Intended mostly for
 ##   internal use, the user should rarely need to call this function
 ##   directly.
-## 
+##
 
 proc bcf_clear*(v: ptr bcf1_t) {.cdecl, importc: "bcf_clear", header: "vcf.h".}
 ## * bcf_open and vcf_open mode: please see hts_open() in hts.h
@@ -334,7 +334,7 @@ proc bcf_hdr_read*(fp: ptr htsFile): ptr bcf_hdr_t {.cdecl, importc: "bcf_hdr_re
 ##               -           .. include all samples
 ##               NULL        .. exclude all samples
 ##   @is_file: @samples is a file (1) or a comma-separated list (1)
-## 
+##
 ##   The bottleneck of VCF reading is parsing of genotype fields. If the
 ##   reader knows in advance that only subset of samples is needed (possibly
 ##   no samples at all), the performance of bcf_read() can be significantly
@@ -343,11 +343,11 @@ proc bcf_hdr_read*(fp: ptr htsFile): ptr bcf_hdr_t {.cdecl, importc: "bcf_hdr_re
 ##   with the notable exception when reading records via bcf_itr_next().
 ##   In this case, bcf_subset_format() must be called explicitly, because
 ##   bcf_readrec() does not see the header.
-## 
+##
 ##   Returns 0 on success, -1 on error or a positive integer if the list
 ##   contains samples not present in the VCF header. In such a case, the
 ##   return value is the index of the offending sample.
-## 
+##
 
 proc bcf_hdr_set_samples*(hdr: ptr bcf_hdr_t; samples: cstring; is_file: cint): cint {.
     cdecl, importc: "bcf_hdr_set_samples", header: "vcf.h".}
@@ -367,22 +367,22 @@ proc vcf_format*(h: ptr bcf_hdr_t; v: ptr bcf1_t; s: ptr kstring.kstring_t): cin
     importc: "vcf_format", header: "vcf.h".}
 ## *
 ##   bcf_read() - read next VCF or BCF record
-## 
+##
 ##   Returns -1 on critical errors, 0 otherwise. On errors which are not
 ##   critical for reading, such as missing header definitions, v->errcode is
 ##   set to one of BCF_ERR* code and must be checked before calling
 ##   vcf_write().
-## 
+##
 
 proc bcf_read*(fp: ptr htsFile; h: ptr bcf_hdr_t; v: ptr bcf1_t): cint {.cdecl,
     importc: "bcf_read", header: "vcf.h".}
 ## *
 ##   bcf_unpack() - unpack/decode a BCF record (fills the bcf1_t::d field)
-## 
+##
 ##   Note that bcf_unpack() must be called even when reading VCF. It is safe
 ##   to call the function repeatedly, it will not unpack the same field
 ##   twice.
-## 
+##
 
 const
   BCF_UN_STR* = 1
@@ -395,20 +395,20 @@ const
 
 proc bcf_unpack*(b: ptr bcf1_t; which: cint): cint {.cdecl, importc: "bcf_unpack",
     header: "vcf.h", discardable.}
-## 
+##
 ##   bcf_dup() - create a copy of BCF record.
-## 
+##
 ##   Note that bcf_unpack() must be called on the returned copy as if it was
 ##   obtained from bcf_read(). Also note that bcf_dup() calls bcf_sync1(src)
 ##   internally to reflect any changes made by bcf_update_* functions.
-## 
+##
 
 proc bcf_dup*(src: ptr bcf1_t): ptr bcf1_t {.cdecl, importc: "bcf_dup", header: "vcf.h".}
 proc bcf_copy*(dst: ptr bcf1_t; src: ptr bcf1_t): ptr bcf1_t {.cdecl, importc: "bcf_copy",
     header: "vcf.h".}
 ## *
 ##   bcf_write() - write one VCF or BCF record. The type is determined at the open() call.
-## 
+##
 
 proc bcf_write*(fp: ptr htsFile; h: ptr bcf_hdr_t; v: ptr bcf1_t): cint {.cdecl,
     importc: "bcf_write", header: "vcf.h", discardable.}
@@ -416,7 +416,7 @@ proc bcf_write*(fp: ptr htsFile; h: ptr bcf_hdr_t; v: ptr bcf1_t): cint {.cdecl,
 ##   The following functions work only with VCFs and should rarely be called
 ##   directly. Usually one wants to use their bcf_* alternatives, which work
 ##   transparently with both VCFs and BCFs.
-## 
+##
 
 proc vcf_hdr_read*(fp: ptr htsFile): ptr bcf_hdr_t {.cdecl, importc: "vcf_hdr_read",
     header: "vcf.h".}
@@ -445,14 +445,14 @@ proc bcf_hdr_dup*(hdr: ptr bcf_hdr_t): ptr bcf_hdr_t {.cdecl, importc: "bcf_hdr_
 ##   Returns 0 on success or sets a bit on error:
 ##       1 .. conflicting definitions of tag length
 ##       // todo
-## 
+##
 
 proc bcf_hdr_combine*(dst: ptr bcf_hdr_t; src: ptr bcf_hdr_t): cint {.cdecl,
     importc: "bcf_hdr_combine", header: "vcf.h".}
 ## *
 ##   bcf_hdr_add_sample() - add a new sample.
 ##   @param sample:  sample name to be added
-## 
+##
 
 proc bcf_hdr_add_sample*(hdr: ptr bcf_hdr_t; sample: cstring): cint {.cdecl,
     importc: "bcf_hdr_add_sample", header: "vcf.h", discardable.}
@@ -463,7 +463,7 @@ proc bcf_hdr_set*(hdr: ptr bcf_hdr_t; fname: cstring): cint {.cdecl,
 ## * Returns formatted header (newly allocated string) and its length,
 ##   excluding the terminating \0. If is_bcf parameter is unset, IDX
 ##   fields are discarded.
-## 
+##
 
 proc bcf_hdr_fmt_text*(hdr: ptr bcf_hdr_t; is_bcf: cint; len: ptr cint): cstring {.cdecl,
     importc: "bcf_hdr_fmt_text", header: "vcf.h".}
@@ -481,7 +481,7 @@ proc bcf_hdr_set_version*(hdr: ptr bcf_hdr_t; version: cstring) {.cdecl,
 ##   bcf_hdr_remove() - remove VCF header tag
 ##   @param type:      one of BCF_HL_*
 ##   @param key:       tag name
-## 
+##
 
 proc bcf_hdr_remove*(h: ptr bcf_hdr_t; `type`: cint; key: cstring) {.cdecl,
     importc: "bcf_hdr_remove", header: "vcf.h".}
@@ -490,12 +490,12 @@ proc bcf_hdr_remove*(h: ptr bcf_hdr_t; `type`: cint; key: cstring) {.cdecl,
 ##   @param n:        number of samples to keep
 ##   @param samples:  names of the samples to keep
 ##   @param imap:     mapping from index in @samples to the sample index in the original file
-## 
+##
 ##   Sample names not present in h0 are ignored. The number of unmatched samples can be checked
 ##   by comparing n and bcf_hdr_nsamples(out_hdr).
 ##   This function can be used to reorder samples.
 ##   See also bcf_subset() which subsets individual records.
-## 
+##
 
 proc bcf_hdr_subset*(h0: ptr bcf_hdr_t; n: cint; samples: cstringArray; imap: ptr cint): ptr bcf_hdr_t {.
     cdecl, importc: "bcf_hdr_subset", header: "vcf.h".}
@@ -527,7 +527,7 @@ proc bcf_hdr_add_hrec*(hdr: ptr bcf_hdr_t; hrec: ptr bcf_hrec_t): cint {.cdecl,
 ##                   for structured lines, typically "ID".
 ##   @param value: the value which pairs with key. Can be be NULL for BCF_HL_GEN
 ##   @param str_class: the class of BCF_HL_STR line (e.g. "ALT" or "SAMPLE"), otherwise NULL
-## 
+##
 
 proc bcf_hdr_get_hrec*(hdr: ptr bcf_hdr_t; `type`: cint; key: cstring; value: cstring;
                       str_class: cstring): ptr bcf_hrec_t {.cdecl,
@@ -558,14 +558,14 @@ proc bcf_subset*(h: ptr bcf_hdr_t; v: ptr bcf1_t; n: cint; imap: ptr cint): cint
 ##   @dst_hdr:   the destination header, to be used in bcf_write(), see also bcf_hdr_combine()
 ##   @src_hdr:   the source header, used in bcf_read()
 ##   @src_line:  line obtained by bcf_read()
-## 
+##
 
 proc bcf_translate*(dst_hdr: ptr bcf_hdr_t; src_hdr: ptr bcf_hdr_t;
                    src_line: ptr bcf1_t): cint {.cdecl, importc: "bcf_translate",
     header: "vcf.h".}
 ## *
 ##   bcf_get_variant_type[s]()  - returns one of VCF_REF, VCF_SNP, etc
-## 
+##
 
 proc bcf_get_variant_types*(rec: ptr bcf1_t): cint {.cdecl,
     importc: "bcf_get_variant_types", header: "vcf.h".}
@@ -576,16 +576,16 @@ proc bcf_is_snp*(v: ptr bcf1_t): cint {.cdecl, importc: "bcf_is_snp", header: "v
 ##   bcf_update_filter() - sets the FILTER column
 ##   @flt_ids:  The filter IDs to set, numeric IDs returned by bcf_id2int(hdr, BCF_DT_ID, "PASS")
 ##   @n:        Number of filters. If n==0, all filters are removed
-## 
+##
 
 proc bcf_update_filter*(hdr: ptr bcf_hdr_t; line: ptr bcf1_t; flt_ids: ptr cint; n: cint): cint {.
     cdecl, importc: "bcf_update_filter", header: "vcf.h", discardable.}
 ## *
 ##   bcf_add_filter() - adds to the FILTER column
 ##   @flt_id:   filter ID to add, numeric ID returned by bcf_id2int(hdr, BCF_DT_ID, "PASS")
-## 
+##
 ##   If flt_id is PASS, all existing filters are removed first. If other than PASS, existing PASS is removed.
-## 
+##
 
 proc bcf_add_filter*(hdr: ptr bcf_hdr_t; line: ptr bcf1_t; flt_id: cint): cint {.cdecl,
     importc: "bcf_add_filter", header: "vcf.h".}
@@ -593,13 +593,13 @@ proc bcf_add_filter*(hdr: ptr bcf_hdr_t; line: ptr bcf1_t; flt_id: cint): cint {
 ##   bcf_remove_filter() - removes from the FILTER column
 ##   @flt_id:   filter ID to remove, numeric ID returned by bcf_id2int(hdr, BCF_DT_ID, "PASS")
 ##   @pass:     when set to 1 and no filters are present, set to PASS
-## 
+##
 
 proc bcf_remove_filter*(hdr: ptr bcf_hdr_t; line: ptr bcf1_t; flt_id: cint; pass: cint): cint {.
     cdecl, importc: "bcf_remove_filter", header: "vcf.h".}
 ## *
 ##   Returns 1 if present, 0 if absent, or -1 if filter does not exist. "PASS" and "." can be used interchangeably.
-## 
+##
 
 proc bcf_has_filter*(hdr: ptr bcf_hdr_t; line: ptr bcf1_t; filter: cstring): cint {.cdecl,
     importc: "bcf_has_filter", header: "vcf.h".}
@@ -608,12 +608,12 @@ proc bcf_has_filter*(hdr: ptr bcf_hdr_t; line: ptr bcf1_t; filter: cstring): cin
 ##   @alleles:           Array of alleles
 ##   @nals:              Number of alleles
 ##   @alleles_string:    Comma-separated alleles, starting with the REF allele
-## 
+##
 ##   Not that in order for indexing to work correctly in presence of INFO/END tag,
 ##   the length of reference allele (line->rlen) must be set explicitly by the caller,
 ##   or otherwise, if rlen is zero, strlen(line->d.allele[0]) is used to set the length
 ##   on bcf_write().
-## 
+##
 
 proc bcf_update_alleles*(hdr: ptr bcf_hdr_t; line: ptr bcf1_t; alleles: cstringArray;
                         nals: cint): cint {.cdecl, importc: "bcf_update_alleles",
@@ -623,19 +623,19 @@ proc bcf_update_alleles_str*(hdr: ptr bcf_hdr_t; line: ptr bcf1_t;
     importc: "bcf_update_alleles_str", header: "vcf.h", discardable.}
 proc bcf_update_id*(hdr: ptr bcf_hdr_t; line: ptr bcf1_t; id: cstring): cint {.cdecl,
     importc: "bcf_update_id", header: "vcf.h", discardable.}
-## 
+##
 ##   bcf_update_info_*() - functions for updating INFO fields
 ##   @hdr:       the BCF header
 ##   @line:      VCF line to be edited
 ##   @key:       the INFO tag to be updated
 ##   @values:    pointer to the array of values. Pass NULL to remove the tag.
 ##   @n:         number of values in the array. When set to 0, the INFO tag is removed
-## 
+##
 ##   The @string in bcf_update_info_flag() is optional, @n indicates whether
 ##   the flag is set or removed.
-## 
+##
 ##   Returns 0 on success or negative value on error.
-## 
+##
 
 template bcf_update_info_int32*(hdr, line, key, values, n: untyped): untyped =
   bcf_update_info((hdr), (line), (key), (values), (n), BCF_HT_INT)
@@ -652,22 +652,22 @@ template bcf_update_info_string*(hdr, line, key, values: untyped): untyped =
 proc bcf_update_info*(hdr: ptr bcf_hdr_t; line: ptr bcf1_t; key: cstring;
                      values: pointer; n: cint; `type`: cint): cint {.cdecl,
     importc: "bcf_update_info", header: "vcf.h", discardable.}
-## 
+##
 ##   bcf_update_format_*() - functions for updating FORMAT fields
 ##   @values:    pointer to the array of values, the same number of elements
 ##               is expected for each sample. Missing values must be padded
 ##               with bcf_*_missing or bcf_*_vector_end values.
 ##   @n:         number of values in the array. If n==0, existing tag is removed.
-## 
+##
 ##   The function bcf_update_format_string() is a higher-level (slower) variant of
 ##   bcf_update_format_char(). The former accepts array of \0-terminated strings
 ##   whereas the latter requires that the strings are collapsed into a single array
 ##   of fixed-length strings. In case of strings with variable length, shorter strings
 ##   can be \0-padded. Note that the collapsed strings passed to bcf_update_format_char()
 ##   are not \0-terminated.
-## 
+##
 ##   Returns 0 on success or negative value on error.
-## 
+##
 
 template bcf_update_format_int32*(hdr, line, key, values, n: untyped): untyped =
   bcf_update_format((hdr), (line), (key), (values), (n), BCF_HT_INT)
@@ -680,7 +680,7 @@ template bcf_update_format_char*(hdr, line, key, values, n: untyped): untyped =
 
 template bcf_update_genotypes*(hdr, line, gts, n: untyped): untyped =
   bcf_update_format((hdr), (line), "GT", (gts), (n), BCF_HT_INT) ##  See bcf_gt_ macros below
-  
+
 proc bcf_update_format_string*(hdr: ptr bcf_hdr_t; line: ptr bcf1_t; key: cstring;
                               values: cstringArray; n: cint): cint {.cdecl,
     importc: "bcf_update_format_string", header: "vcf.h", discardable.}
@@ -729,10 +729,10 @@ proc bcf_gt2alleles*(igt: cint; a: ptr cint; b: ptr cint) {.inline, cdecl.} =
 ##  @header: for access to BCF_DT_ID dictionary
 ##  @line:   VCF line obtained from vcf_parse1
 ##  @fmt:    one of GT,PL,...
-## 
+##
 ##  Returns bcf_fmt_t* if the call succeeded, or returns NULL when the field
 ##  is not available.
-## 
+##
 
 proc bcf_get_fmt*(hdr: ptr bcf_hdr_t; line: ptr bcf1_t; key: cstring): ptr bcf_fmt_t {.
     cdecl, importc: "bcf_get_fmt", header: "vcf.h".}
@@ -742,10 +742,10 @@ proc bcf_get_info*(hdr: ptr bcf_hdr_t; line: ptr bcf1_t; key: cstring): ptr bcf_
 ##  bcf_get_*_id() - returns pointer to FORMAT/INFO field data given the header index instead of the string ID
 ##  @line: VCF line obtained from vcf_parse1
 ##  @id:  The header index for the tag, obtained from bcf_hdr_id2int()
-##  
-##  Returns bcf_fmt_t* / bcf_info_t*. These functions do not check if the index is valid 
+##
+##  Returns bcf_fmt_t* / bcf_info_t*. These functions do not check if the index is valid
 ##  as their goal is to avoid the header lookup.
-## 
+##
 
 proc bcf_get_fmt_id*(line: ptr bcf1_t; id: cint): ptr bcf_fmt_t {.cdecl,
     importc: "bcf_get_fmt_id", header: "vcf.h".}
@@ -758,17 +758,17 @@ proc bcf_get_info_id*(line: ptr bcf1_t; id: cint): ptr bcf_info_t {.cdecl,
 ##   @tag:       INFO tag to retrieve
 ##   @dst:       *dst is pointer to a memory location, can point to NULL
 ##   @ndst:      pointer to the size of allocated memory
-## 
+##
 ##   Returns negative value on error or the number of written values on
 ##   success. bcf_get_info_string() returns on success the number of
 ##   characters written excluding the null-terminating byte. bcf_get_info_flag()
 ##   returns 1 when flag is set or 0 if not.
-## 
+##
 ##   List of return codes:
 ##       -1 .. no such INFO tag defined in the header
 ##       -2 .. clash between types defined in the header and encountered in the VCF record
 ##       -3 .. tag is not present in the VCF record
-## 
+##
 
 template bcf_get_info_int32*(hdr, line, tag, dst, ndst: untyped): untyped =
   bcf_get_info_values(hdr, line, tag, cast[ptr pointer]((dst)), ndst, BCF_HT_INT)
@@ -787,25 +787,25 @@ proc bcf_get_info_values*(hdr: ptr bcf_hdr_t; line: ptr bcf1_t; tag: cstring;
     importc: "bcf_get_info_values", header: "vcf.h".}
 ## *
 ##   bcf_get_format_*() - same as bcf_get_info*() above
-## 
+##
 ##   The function bcf_get_format_string() is a higher-level (slower) variant of bcf_get_format_char().
 ##   see the description of bcf_update_format_string() and bcf_update_format_char() above.
 ##   Unlike other bcf_get_format__*() functions, bcf_get_format_string() allocates two arrays:
 ##   a single block of \0-terminated strings collapsed into a single array and an array of pointers
 ##   to these strings. Both arrays must be cleaned by the user.
-## 
+##
 ##   Returns negative value on error or the number of written values on success.
-## 
+##
 ##   Example:
 ##       int ndst = 0; char **dst = NULL;
 ##       if ( bcf_get_format_string(hdr, line, "XX", &dst, &ndst) > 0 )
 ##           for (i=0; i<bcf_hdr_nsamples(hdr); i++) printf("%s\n", dst[i]);
 ##       free(dst[0]); free(dst);
-## 
+##
 ##   Example:
 ##       int ngt, *gt_arr = NULL, ngt_arr = 0;
 ##       ngt = bcf_get_genotypes(hdr, line, &gt_arr, &ngt_arr);
-## 
+##
 
 template bcf_get_format_int32*(hdr, line, tag, dst, ndst: untyped): untyped =
   bcf_get_format_values(hdr, line, tag, cast[ptr pointer]((dst)), ndst, BCF_HT_INT)
@@ -833,10 +833,10 @@ proc bcf_get_format_values*(hdr: ptr bcf_hdr_t; line: ptr bcf1_t; tag: cstring;
 ##   bcf_hdr_int2id() - Translates numeric ID into string
 ##   @type:     one of BCF_DT_ID, BCF_DT_CTG, BCF_DT_SAMPLE
 ##   @id:       tag name, such as: PL, DP, GT, etc.
-## 
+##
 ##   Returns -1 if string is not in dictionary, otherwise numeric ID which identifies
 ##   fields in BCF records.
-## 
+##
 
 proc bcf_hdr_id2int*(hdr: ptr bcf_hdr_t; `type`: cint; id: cstring): cint {.cdecl,
     importc: "bcf_hdr_id2int", header: "vcf.h".}
@@ -846,7 +846,7 @@ template bcf_hdr_int2id*(hdr, `type`, int_id: untyped): untyped =
 ## *
 ##   bcf_hdr_name2id() - Translates sequence names (chromosomes) into numeric ID
 ##   bcf_hdr_id2name() - Translates numeric ID to sequence name
-## 
+##
 
 proc bcf_hdr_name2id*(hdr: ptr bcf_hdr_t; id: cstring): cint {.inline, cdecl.} =
   return bcf_hdr_id2int(hdr, BCF_DT_CTG, id)
@@ -863,16 +863,16 @@ proc bcf_seqname*(hdr: ptr bcf_hdr_t; rec: ptr bcf1_t): cstring {.inline, cdecl.
 ##   bcf_hdr_id2*() - Macros for accessing bcf_idinfo_t
 ##   @type:      one of BCF_HL_FLT, BCF_HL_INFO, BCF_HL_FMT
 ##   @int_id:    return value of bcf_id2int, must be >=0
-## 
+##
 ##   The returned values are:
 ##      bcf_hdr_id2length   ..  whether the number of values is fixed or variable, one of BCF_VL_*
 ##      bcf_hdr_id2number   ..  the number of values, 0xfffff for variable length fields
 ##      bcf_hdr_id2type     ..  the field type, one of BCF_HT_*
 ##      bcf_hdr_id2coltype  ..  the column type, one of BCF_HL_*
-## 
+##
 ##   Notes: Prior to using the macros, the presence of the info should be
 ##   tested with bcf_hdr_idinfo_exists().
-## 
+##
 
 template bcf_hdr_id2length*(hdr, `type`, int_id: untyped): untyped =
   ((hdr).id[BCF_DT_ID][int_id].val.info[`type`] shr 8 and 0x0000000F)
@@ -905,7 +905,7 @@ proc bcf_enc_vfloat*(s: ptr kstring.kstring_t; n: cint; a: ptr cfloat) {.cdecl,
     importc: "bcf_enc_vfloat", header: "vcf.h".}
 ## *************************************************************************
 ##   BCF index
-## 
+##
 ##   Note that these functions work with BCFs only. See synced_bcf_reader.h
 ##   which provides (amongst other things) an API to work transparently with
 ##   both indexed BCFs and VCFs.
@@ -935,7 +935,7 @@ proc bcf_index_build*(fn: cstring; min_shift: cint): cint {.cdecl,
 ## ******************
 ##  Typed value I/O *
 ## *****************
-## 
+##
 ##     Note that in contrast with BCFv2.1 specification, HTSlib implementation
 ##     allows missing values in vectors. For integer types, the values 0x80,
 ##     0x8000, 0x80000000 are interpreted as missing values and 0x81, 0x8001,
@@ -943,11 +943,11 @@ proc bcf_index_build*(fn: cstring; min_shift: cint): cint {.cdecl,
 ##     0x7F800001 is interpreted as a missing value and 0x7F800002 as an
 ##     end-of-vector indicator.
 ##     Note that the end-of-vector byte is not part of the vector.
-## 
+##
 ##     This trial BCF version (v2.2) is compatible with the VCF specification and
 ##     enables to handle correctly vectors with different ploidy in presence of
 ##     missing values.
-## 
+##
 
 const
   INT8_MIN = int8.low
@@ -1024,7 +1024,7 @@ proc bcf_enc_size*(s: ptr kstring.kstring_t; size: cint; `type`: cint) {.inline,
       discard kputc(size, s)
   else:
     discard kputc(size shl 4 or `type`, s)
-  
+
 proc bcf_enc_inttype*(x: clong): cint {.inline, cdecl.} =
   if x <= INT8_MAX and x > bcf_int8_missing: return BCF_BT_INT8
   if x <= INT16_MAX and x > bcf_int16_missing: return BCF_BT_INT16
