@@ -1,6 +1,4 @@
 # vim: sw=2 ts=2 sts=2 tw=80 et:
-#{.passC: "-g -Wall -I./inc".}
-#{.passL: "-Lpbbam/third-party/htslib/build/ -lhts -lz".}
 ##   test/test-vcf-api.c -- VCF test harness.
 ##
 ##     Copyright (C) 2013, 2014 Genome Research Ltd.
