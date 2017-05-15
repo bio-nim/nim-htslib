@@ -22,8 +22,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.  */
 
-#include <config.h>
-
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,7 +32,7 @@ DEALINGS IN THE SOFTWARE.  */
 #include "htslib/hfile.h"
 #include "htslib/hts_defs.h"
 
-void HTS_NORETURN fail(const char *format, ...)
+void fail(const char *format, ...)
 {
     int err = errno;
     va_list args;
@@ -79,6 +77,7 @@ char *slurp(const char *filename)
 
 hFILE *fin = NULL;
 hFILE *fout = NULL;
+char const* arbitrary_existing_fn = "/Users/cdunn2001/repo/gh/htslib/vcf.c";
 
 void reopen(const char *infname, const char *outfname)
 {
@@ -86,10 +85,10 @@ void reopen(const char *infname, const char *outfname)
     if (fout) { if (hclose(fout) != 0) fail("hclose(output)"); }
 
     fin = hopen(infname, "r");
-    if (fin == NULL) fail("hopen(\"%s\")", infname);
+    if (fin == NULL) fail("hopen(\"%s\", 'r')", infname);
 
     fout = hopen(outfname, "w");
-    if (fout == NULL) fail("hopen(\"%s\")", outfname);
+    if (fout == NULL) fail("hopen(\"%s\", 'w')", outfname);
 }
 
 int main(void)
@@ -102,7 +101,7 @@ int main(void)
     ssize_t n;
     off_t off;
 
-    reopen("vcf.c", "test/hfile1.tmp");
+    reopen(arbitrary_existing_fn, "test/hfile1.tmp");
     while ((c = hgetc(fin)) != EOF) {
         if (hputc(c, fout) == EOF) fail("hputc");
     }
@@ -143,7 +142,7 @@ int main(void)
     }
     if (herrno(fin)) fail("hgets");
 
-    reopen("test/hfile5.tmp", "test/hfile6.tmp");
+    reopen("test/hfile4.tmp", "test/hfile6.tmp");
     n = hread(fin, buffer, 200);
     if (n < 0) fail("hread");
     else if (n != 200) fail("hread only got %d", (int)n);
@@ -172,13 +171,13 @@ int main(void)
 
     if (hflush(fout) == EOF) fail("hflush");
 
-    original = slurp("vcf.c");
+    original = slurp(arbitrary_existing_fn);
     for (i = 1; i <= 6; i++) {
         char *text;
         sprintf(buffer, "test/hfile%d.tmp", i);
         text = slurp(buffer);
         if (strcmp(original, text) != 0) {
-            fprintf(stderr, "%s differs from vcf.c\n", buffer);
+            fprintf(stderr, "%s differs from %s\n", buffer, arbitrary_existing_fn);
             return EXIT_FAILURE;
         }
         free(text);
