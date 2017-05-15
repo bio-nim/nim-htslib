@@ -34,12 +34,12 @@ const
   BGZF_ERR_MISUSE* = 8
 
 type
-  hFILE* {.importc: "hFILE", header: "bgzf.h".} = object
+  hFILE* {.importc: "hFILE", header: "htslib/bgzf.h".} = object
 
-  bgzf_mtaux_t* {.importc: "bgzf_mtaux_t", header: "bgzf.h".} = object
+  bgzf_mtaux_t* {.importc: "bgzf_mtaux_t", header: "htslib/bgzf.h".} = object
 
   bgzidx_t* = __bgzidx_t
-  BGZF* {.importc: "BGZF", header: "bgzf.h".} = object
+  BGZF* {.importc: "BGZF", header: "htslib/bgzf.h".} = object
     errcode* {.importc: "errcode".} {.bitsize: 16.}: cint
     is_write* {.importc: "is_write".} {.bitsize: 2.}: cint
     is_be* {.importc: "is_be".} {.bitsize: 2.}: cint
@@ -65,7 +65,7 @@ when not defined(HTS_BGZF_TYPEDEF):
   const
     HTS_BGZF_TYPEDEF* = true
 type
-  kstring_t* {.importc: "kstring_t", header: "bgzf.h".} = object
+  kstring_t* {.importc: "kstring_t", header: "htslib/bgzf.h".} = object
     l* {.importc: "l".}: csize
     m* {.importc: "m".}: csize
     s* {.importc: "s".}: cstring
@@ -89,7 +89,7 @@ type
 ##
 
 proc bgzf_dopen*(fd: cint; mode: cstring): ptr BGZF {.cdecl, importc: "bgzf_dopen",
-    header: "bgzf.h".}
+    header: "htslib/bgzf.h".}
 template bgzf_fdopen*(fd, mode: untyped): untyped =
   bgzf_dopen((fd), (mode))     ##  for backward compatibility
 
@@ -98,13 +98,13 @@ template bgzf_fdopen*(fd, mode: untyped): untyped =
 ##
 
 proc bgzf_open*(path: cstring; mode: cstring): ptr BGZF {.cdecl, importc: "bgzf_open",
-    header: "bgzf.h".}
+    header: "htslib/bgzf.h".}
 ## *
 ##  Open an existing hFILE stream for reading or writing.
 ##
 
 proc bgzf_hopen*(fp: ptr hFILE; mode: cstring): ptr BGZF {.cdecl, importc: "bgzf_hopen",
-    header: "bgzf.h".}
+    header: "htslib/bgzf.h".}
 ## *
 ##  Close the BGZF and free all associated resources.
 ##
@@ -112,7 +112,7 @@ proc bgzf_hopen*(fp: ptr hFILE; mode: cstring): ptr BGZF {.cdecl, importc: "bgzf
 ##  @return      0 on success and -1 on error
 ##
 
-proc bgzf_close*(fp: ptr BGZF): cint {.cdecl, importc: "bgzf_close", header: "bgzf.h".}
+proc bgzf_close*(fp: ptr BGZF): cint {.cdecl, importc: "bgzf_close", header: "htslib/bgzf.h".}
 ## *
 ##  Read up to _length_ bytes from the file storing into _data_.
 ##
@@ -123,7 +123,7 @@ proc bgzf_close*(fp: ptr BGZF): cint {.cdecl, importc: "bgzf_close", header: "bg
 ##
 
 proc bgzf_read*(fp: ptr BGZF; data: pointer; length: csize): ssize_t {.cdecl,
-    importc: "bgzf_read", header: "bgzf.h".}
+    importc: "bgzf_read", header: "htslib/bgzf.h".}
 ## *
 ##  Write _length_ bytes from _data_ to the file.  If no I/O errors occur,
 ##  the complete _length_ bytes will be written (or queued for writing).
@@ -135,7 +135,7 @@ proc bgzf_read*(fp: ptr BGZF; data: pointer; length: csize): ssize_t {.cdecl,
 ##
 
 proc bgzf_write*(fp: ptr BGZF; data: pointer; length: csize): ssize_t {.cdecl,
-    importc: "bgzf_write", header: "bgzf.h".}
+    importc: "bgzf_write", header: "htslib/bgzf.h".}
 ## *
 ##  Read up to _length_ bytes directly from the underlying stream without
 ##  decompressing.  Bypasses BGZF blocking, so must be used with care in
@@ -148,7 +148,7 @@ proc bgzf_write*(fp: ptr BGZF; data: pointer; length: csize): ssize_t {.cdecl,
 ##
 
 proc bgzf_raw_read*(fp: ptr BGZF; data: pointer; length: csize): ssize_t {.cdecl,
-    importc: "bgzf_raw_read", header: "bgzf.h".}
+    importc: "bgzf_raw_read", header: "htslib/bgzf.h".}
 ## *
 ##  Write _length_ bytes directly to the underlying stream without
 ##  compressing.  Bypasses BGZF blocking, so must be used with care
@@ -161,12 +161,12 @@ proc bgzf_raw_read*(fp: ptr BGZF; data: pointer; length: csize): ssize_t {.cdecl
 ##
 
 proc bgzf_raw_write*(fp: ptr BGZF; data: pointer; length: csize): ssize_t {.cdecl,
-    importc: "bgzf_raw_write", header: "bgzf.h".}
+    importc: "bgzf_raw_write", header: "htslib/bgzf.h".}
 ## *
 ##  Write the data in the buffer to the file.
 ##
 
-proc bgzf_flush*(fp: ptr BGZF): cint {.cdecl, importc: "bgzf_flush", header: "bgzf.h".}
+proc bgzf_flush*(fp: ptr BGZF): cint {.cdecl, importc: "bgzf_flush", header: "htslib/bgzf.h".}
 ## *
 ##  Return a virtual file pointer to the current location in the file.
 ##  No interpetation of the value should be made, other than a subsequent
@@ -187,7 +187,7 @@ template bgzf_tell*(fp: untyped): untyped =
 ##
 
 proc bgzf_seek*(fp: ptr BGZF; pos: int64_t; whence: cint): int64_t {.cdecl,
-    importc: "bgzf_seek", header: "bgzf.h".}
+    importc: "bgzf_seek", header: "htslib/bgzf.h".}
 ## *
 ##  Check if the BGZF end-of-file (EOF) marker is present
 ##
@@ -199,7 +199,7 @@ proc bgzf_seek*(fp: ptr BGZF; pos: int64_t; whence: cint): int64_t {.cdecl,
 ##
 
 proc bgzf_check_EOF*(fp: ptr BGZF): cint {.cdecl, importc: "bgzf_check_EOF",
-                                      header: "bgzf.h".}
+                                      header: "htslib/bgzf.h".}
 ## *
 ##  Check if a file is in the BGZF format
 ##
@@ -208,7 +208,7 @@ proc bgzf_check_EOF*(fp: ptr BGZF): cint {.cdecl, importc: "bgzf_check_EOF",
 ##
 
 proc bgzf_is_bgzf*(fn: cstring): cint {.cdecl, importc: "bgzf_is_bgzf",
-                                    header: "bgzf.h".}
+                                    header: "htslib/bgzf.h".}
 ## ********************
 ##  Advanced routines *
 ## *******************
@@ -220,21 +220,21 @@ proc bgzf_is_bgzf*(fn: cstring): cint {.cdecl, importc: "bgzf_is_bgzf",
 ##
 
 proc bgzf_set_cache_size*(fp: ptr BGZF; size: cint) {.cdecl,
-    importc: "bgzf_set_cache_size", header: "bgzf.h".}
+    importc: "bgzf_set_cache_size", header: "htslib/bgzf.h".}
 ## *
 ##  Flush the file if the remaining buffer size is smaller than _size_
 ##  @return      0 if flushing succeeded or was not needed; negative on error
 ##
 
 proc bgzf_flush_try*(fp: ptr BGZF; size: ssize_t): cint {.cdecl,
-    importc: "bgzf_flush_try", header: "bgzf.h".}
+    importc: "bgzf_flush_try", header: "htslib/bgzf.h".}
 ## *
 ##  Read one byte from a BGZF file. It is faster than bgzf_read()
 ##  @param fp     BGZF file handler
 ##  @return       byte read; -1 on end-of-file or error
 ##
 
-proc bgzf_getc*(fp: ptr BGZF): cint {.cdecl, importc: "bgzf_getc", header: "bgzf.h".}
+proc bgzf_getc*(fp: ptr BGZF): cint {.cdecl, importc: "bgzf_getc", header: "htslib/bgzf.h".}
 ## *
 ##  Read one line from a BGZF file. It is faster than bgzf_getc()
 ##
@@ -245,13 +245,13 @@ proc bgzf_getc*(fp: ptr BGZF): cint {.cdecl, importc: "bgzf_getc", header: "bgzf
 ##
 
 proc bgzf_getline*(fp: ptr BGZF; delim: cint; str: ptr kstring_t): cint {.cdecl,
-    importc: "bgzf_getline", header: "bgzf.h".}
+    importc: "bgzf_getline", header: "htslib/bgzf.h".}
 ## *
 ##  Read the next BGZF block.
 ##
 
 proc bgzf_read_block*(fp: ptr BGZF): cint {.cdecl, importc: "bgzf_read_block",
-                                       header: "bgzf.h".}
+                                       header: "htslib/bgzf.h".}
 ## *
 ##  Enable multi-threading (only effective on writing and when the
 ##  library was compiled with -DBGZF_MT)
@@ -262,7 +262,7 @@ proc bgzf_read_block*(fp: ptr BGZF): cint {.cdecl, importc: "bgzf_read_block",
 ##
 
 proc bgzf_mt*(fp: ptr BGZF; n_threads: cint; n_sub_blks: cint): cint {.cdecl,
-    importc: "bgzf_mt", header: "bgzf.h".}
+    importc: "bgzf_mt", header: "htslib/bgzf.h".}
 ## ******************
 ##  bgzidx routines *
 ## *****************
@@ -277,7 +277,7 @@ proc bgzf_mt*(fp: ptr BGZF; n_threads: cint; n_sub_blks: cint): cint {.cdecl,
 ##
 
 proc bgzf_useek*(fp: ptr BGZF; uoffset: clong; where: cint): cint {.cdecl,
-    importc: "bgzf_useek", header: "bgzf.h".}
+    importc: "bgzf_useek", header: "htslib/bgzf.h".}
 ## *
 ##   Position in uncompressed BGZF
 ##
@@ -286,7 +286,7 @@ proc bgzf_useek*(fp: ptr BGZF; uoffset: clong; where: cint): cint {.cdecl,
 ##   Returns the current offset on success and -1 on error.
 ##
 
-proc bgzf_utell*(fp: ptr BGZF): clong {.cdecl, importc: "bgzf_utell", header: "bgzf.h".}
+proc bgzf_utell*(fp: ptr BGZF): clong {.cdecl, importc: "bgzf_utell", header: "htslib/bgzf.h".}
 ## *
 ##  Tell BGZF to build index while compressing.
 ##
@@ -296,7 +296,7 @@ proc bgzf_utell*(fp: ptr BGZF): clong {.cdecl, importc: "bgzf_utell", header: "b
 ##
 
 proc bgzf_index_build_init*(fp: ptr BGZF): cint {.cdecl,
-    importc: "bgzf_index_build_init", header: "bgzf.h".}
+    importc: "bgzf_index_build_init", header: "htslib/bgzf.h".}
 ## *
 ##  Load BGZF index
 ##
@@ -308,7 +308,7 @@ proc bgzf_index_build_init*(fp: ptr BGZF): cint {.cdecl,
 ##
 
 proc bgzf_index_load*(fp: ptr BGZF; bname: cstring; suffix: cstring): cint {.cdecl,
-    importc: "bgzf_index_load", header: "bgzf.h".}
+    importc: "bgzf_index_load", header: "htslib/bgzf.h".}
 ## *
 ##  Save BGZF index
 ##
@@ -320,4 +320,4 @@ proc bgzf_index_load*(fp: ptr BGZF; bname: cstring; suffix: cstring): cint {.cde
 ##
 
 proc bgzf_index_dump*(fp: ptr BGZF; bname: cstring; suffix: cstring): cint {.cdecl,
-    importc: "bgzf_index_dump", header: "bgzf.h".}
+    importc: "bgzf_index_dump", header: "htslib/bgzf.h".}

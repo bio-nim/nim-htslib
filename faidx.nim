@@ -42,7 +42,7 @@
 ##   @copyright The Wellcome Trust Sanger Institute.
 ##
 
-type faidx_t* {.importc: "faidx_t", header: "faidx.h".} = object
+type faidx_t* {.importc: "faidx_t", header: "htslib/faidx.h".} = object
 ## !
 ##       @abstract   Build index for a FASTA or bgzip-compressed FASTA file.
 ##       @param  fn  FASTA file name
@@ -50,19 +50,19 @@ type faidx_t* {.importc: "faidx_t", header: "faidx.h".} = object
 ##       @discussion File "fn.fai" will be generated.
 ##
 
-proc fai_build*(fn: cstring): cint {.cdecl, importc: "fai_build", header: "faidx.h".}
+proc fai_build*(fn: cstring): cint {.cdecl, importc: "fai_build", header: "htslib/faidx.h".}
 ## !
 ##       @abstract    Distroy a faidx_t struct.
 ##       @param  fai  Pointer to the struct to be destroyed
 ##
 
-proc fai_destroy*(fai: ptr faidx_t) {.cdecl, importc: "fai_destroy", header: "faidx.h".}
+proc fai_destroy*(fai: ptr faidx_t) {.cdecl, importc: "fai_destroy", header: "htslib/faidx.h".}
 ## !
 ##       @abstract   Load index from "fn.fai".
 ##       @param  fn  File name of the FASTA file
 ##
 
-proc fai_load*(fn: cstring): ptr faidx_t {.cdecl, importc: "fai_load", header: "faidx.h".}
+proc fai_load*(fn: cstring): ptr faidx_t {.cdecl, importc: "fai_load", header: "htslib/faidx.h".}
 ## !
 ##       @abstract    Fetch the sequence in a region.
 ##       @param  fai  Pointer to the faidx_t struct
@@ -75,7 +75,7 @@ proc fai_load*(fn: cstring): ptr faidx_t {.cdecl, importc: "fai_load", header: "
 ##
 
 proc fai_fetch*(fai: ptr faidx_t; reg: cstring; len: ptr cint): cstring {.cdecl,
-    importc: "fai_fetch", header: "faidx.h".}
+    importc: "fai_fetch", header: "htslib/faidx.h".}
 ## !
 ##       @abstract    Fetch the number of sequences.
 ##       @param  fai  Pointer to the faidx_t struct
@@ -83,7 +83,7 @@ proc fai_fetch*(fai: ptr faidx_t; reg: cstring; len: ptr cint): cstring {.cdecl,
 ##
 
 proc faidx_fetch_nseq*(fai: ptr faidx_t): cint {.cdecl, importc: "faidx_fetch_nseq",
-    header: "faidx.h".}
+    header: "htslib/faidx.h".}
 ## !
 ##       @abstract    Fetch the sequence in a region.
 ##       @param  fai  Pointer to the faidx_t struct
@@ -99,7 +99,7 @@ proc faidx_fetch_nseq*(fai: ptr faidx_t): cint {.cdecl, importc: "faidx_fetch_ns
 
 proc faidx_fetch_seq*(fai: ptr faidx_t; c_name: cstring; p_beg_i: cint; p_end_i: cint;
                      len: ptr cint): cstring {.cdecl, importc: "faidx_fetch_seq",
-    header: "faidx.h".}
+    header: "htslib/faidx.h".}
 ## !
 ##       @abstract    Query if sequence is present
 ##       @param  fai  Pointer to the faidx_t struct
@@ -108,22 +108,22 @@ proc faidx_fetch_seq*(fai: ptr faidx_t; c_name: cstring; p_beg_i: cint; p_end_i:
 ##
 
 proc faidx_has_seq*(fai: ptr faidx_t; seq: cstring): cint {.cdecl,
-    importc: "faidx_has_seq", header: "faidx.h".}
+    importc: "faidx_has_seq", header: "htslib/faidx.h".}
 ## !
 ##       @abstract    Return number of sequences in fai index
 ##
 
 proc faidx_nseq*(fai: ptr faidx_t): cint {.cdecl, importc: "faidx_nseq",
-                                      header: "faidx.h".}
+                                      header: "htslib/faidx.h".}
 ## !
 ##       @abstract    Return name of i-th sequence
 ##
 
 proc faidx_iseq*(fai: ptr faidx_t; i: cint): cstring {.cdecl, importc: "faidx_iseq",
-    header: "faidx.h".}
+    header: "htslib/faidx.h".}
 ## !
 ##       @abstract    Return sequence length, -1 if not present
 ##
 
 proc faidx_seq_len*(fai: ptr faidx_t; seq: cstring): cint {.cdecl,
-    importc: "faidx_seq_len", header: "faidx.h".}
+    importc: "faidx_seq_len", header: "htslib/faidx.h".}

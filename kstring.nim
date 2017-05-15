@@ -39,12 +39,12 @@ const
   KS_SEP_MAX*   = 2
 
 type
-  kstring_t* {.importc: "kstring_t", header: "kstring.h".} = object
+  kstring_t* {.importc: "kstring_t", header: "htslib/kstring.h".} = object
     L* {.importc: "l".}: csize
     m* {.importc: "m".}: csize
     s* {.importc: "s".}: cstring
 
-  ks_tokaux_t* {.importc: "ks_tokaux_t", header: "kstring.h".} = object
+  ks_tokaux_t* {.importc: "ks_tokaux_t", header: "htslib/kstring.h".} = object
     tab* {.importc: "tab".}: array[4, uint64]
     sep* {.importc: "sep".}: cint
     finished* {.importc: "finished".}: cint
@@ -60,24 +60,24 @@ proc kroundup32*[T](x: var T) =
   inc(x)
 
 #proc kvsprintf*(s: ptr kstring_t; fmt: cstring; ap: va_list): cint {.cdecl,
-#    importc: "kvsprintf", header: "kstring.h".}
+#    importc: "kvsprintf", header: "htslib/kstring.h".}
 proc ksprintf*(s: ptr kstring_t; fmt: cstring): cint {.varargs, cdecl,
-    importc: "ksprintf", header: "kstring.h".}
+    importc: "ksprintf", header: "htslib/kstring.h".}
 proc ksplit_core*(s: cstring; delimiter: cint; max: ptr cint; offsets: ptr ptr cint): cint {.
-    cdecl, importc: "ksplit_core", header: "kstring.h".}
+    cdecl, importc: "ksplit_core", header: "htslib/kstring.h".}
 proc kstrstr*(str: cstring; pat: cstring; prep: ptr ptr cint): cstring {.cdecl,
-    importc: "kstrstr", header: "kstring.h".}
+    importc: "kstrstr", header: "htslib/kstring.h".}
 proc kstrnstr*(str: cstring; pat: cstring; n: cint; prep: ptr ptr cint): cstring {.cdecl,
-    importc: "kstrnstr", header: "kstring.h".}
+    importc: "kstrnstr", header: "htslib/kstring.h".}
 proc kmemmem*(str: pointer; n: cint; pat: pointer; m: cint; prep: ptr ptr cint): pointer {.
-    cdecl, importc: "kmemmem", header: "kstring.h".}
+    cdecl, importc: "kmemmem", header: "htslib/kstring.h".}
 ##  kstrtok() is similar to strtok_r() except that str is not
 ##  modified and both str and sep can be NULL. For efficiency, it is
 ##  actually recommended to set both to NULL in the subsequent calls
 ##  if sep is not changed.
 
 proc kstrtok*(str: cstring; sep: cstring; aux: ptr ks_tokaux_t): cstring {.cdecl,
-    importc: "kstrtok", header: "kstring.h".}
+    importc: "kstrtok", header: "htslib/kstring.h".}
 proc ks_resize*(s: ptr kstring_t; size: csize): cint {.inline, cdecl.} =
   if s.m < size:
     var tmp: cstring

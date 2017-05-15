@@ -27,9 +27,9 @@
 ##    directly; you should imagine that hFILE is an opaque incomplete type.
 
 type
-  hFILE_backend* {.importc: "hFILE_backend", header: "hfile.h".} = object
+  hFILE_backend* {.importc: "hFILE_backend", header: "htslib/hfile.h".} = object
 
-  hFILE* {.importc: "hFILE", header: "hfile.h".} = object
+  hFILE* {.importc: "hFILE", header: "htslib/hfile.h".} = object
     buffer* {.importc: "buffer".}: cstring
     begin* {.importc: "begin".}: cstring
     `end`* {.importc: "end".}: cstring
@@ -46,7 +46,7 @@ type
 ##
 
 proc hopen*(filename: cstring; mode: cstring): ptr hFILE {.cdecl, importc: "hopen",
-    header: "hfile.h".}
+    header: "htslib/hfile.h".}
 ## !
 ##   @abstract  Associate a stream with an existing open file descriptor
 ##   @return    An hFILE pointer, or NULL (with errno set) if an error occurred.
@@ -54,20 +54,20 @@ proc hopen*(filename: cstring; mode: cstring): ptr hFILE {.cdecl, importc: "hope
 ##
 
 proc hdopen*(fd: cint; mode: cstring): ptr hFILE {.cdecl, importc: "hdopen",
-    header: "hfile.h".}
+    header: "htslib/hfile.h".}
 ## !
 ##   @abstract  Flush (for output streams) and close the stream
 ##   @return    0 if successful, or EOF (with errno set) if an error occurred.
 ##
 
-proc hclose*(fp: ptr hFILE): cint {.cdecl, importc: "hclose", header: "hfile.h".}
+proc hclose*(fp: ptr hFILE): cint {.cdecl, importc: "hclose", header: "htslib/hfile.h".}
 ## !
 ##   @abstract  Close the stream, without flushing or propagating errors
 ##   @notes     For use while cleaning up after an error only.  Preserves errno.
 ##
 
 proc hclose_abruptly*(fp: ptr hFILE) {.cdecl, importc: "hclose_abruptly",
-                                   header: "hfile.h".}
+                                   header: "htslib/hfile.h".}
 ## !
 ##   @abstract  Return the stream's error indicator
 ##   @return    Non-zero (in fact, an errno value) if an error has occurred.
@@ -91,7 +91,7 @@ proc hclearerr*(fp: ptr hFILE) {.inline, cdecl.} =
 ##
 
 proc hseek*(fp: ptr hFILE; offset: off_t; whence: cint): off_t {.cdecl, importc: "hseek",
-    header: "hfile.h".}
+    header: "htslib/hfile.h".}
 ## !
 ##   @abstract  Report the current stream offset
 ##   @return    The offset within the stream, starting from zero.
@@ -122,7 +122,7 @@ proc hgetc*(fp: ptr hFILE): cint {.inline, cdecl.} =
 ##
 
 proc hpeek*(fp: ptr hFILE; buffer: pointer; nbytes: csize): ssize_t {.cdecl,
-    importc: "hpeek", header: "hfile.h".}
+    importc: "hpeek", header: "htslib/hfile.h".}
 ## !
 ##   @abstract  Read a block of characters from the file
 ##   @return    The number of bytes read, or negative if an error occurred.
@@ -183,4 +183,4 @@ proc hwrite*(fp: ptr hFILE; buffer: pointer; nbytes: csize): ssize_t {.inline, c
 ##   @return    0 if successful, or EOF if an error occurred.
 ##
 
-proc hflush*(fp: ptr hFILE): cint {.cdecl, importc: "hflush", header: "hfile.h".}
+proc hflush*(fp: ptr hFILE): cint {.cdecl, importc: "hflush", header: "htslib/hfile.h".}

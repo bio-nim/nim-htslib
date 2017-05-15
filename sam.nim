@@ -40,7 +40,7 @@ import
 ##
 
 type
-  bam_hdr_t* {.importc: "bam_hdr_t", header: "sam.h".} = object
+  bam_hdr_t* {.importc: "bam_hdr_t", header: "htslib/sam.h".} = object
     n_targets* {.importc: "n_targets".}: int32_t
     ignore_sam_err* {.importc: "ignore_sam_err".}: int32_t
     l_text* {.importc: "l_text".}: uint32_t
@@ -184,7 +184,7 @@ const
 ##
 
 type
-  bam1_core_t* {.importc: "bam1_core_t", header: "sam.h".} = object
+  bam1_core_t* {.importc: "bam1_core_t", header: "htslib/sam.h".} = object
     tid* {.importc: "tid".}: int32_t
     pos* {.importc: "pos".}: int32_t
     bin* {.importc: "bin".} {.bitsize: 16.}: uint32_t
@@ -215,7 +215,7 @@ type
 ##
 
 type
-  bam1_t* {.importc: "bam1_t", header: "sam.h".} = object
+  bam1_t* {.importc: "bam1_t", header: "htslib/sam.h".} = object
     core* {.importc: "core".}: bam1_core_t
     l_data* {.importc: "l_data".}: cint
     m_data* {.importc: "m_data".}: cint
@@ -325,31 +325,31 @@ template bam_seqi*(s, i: untyped): untyped =
 ## ** BAM I/O ***
 ## *************
 
-proc bam_hdr_init*(): ptr bam_hdr_t {.cdecl, importc: "bam_hdr_init", header: "sam.h".}
+proc bam_hdr_init*(): ptr bam_hdr_t {.cdecl, importc: "bam_hdr_init", header: "htslib/sam.h".}
 proc bam_hdr_read*(fp: ptr BGZF): ptr bam_hdr_t {.cdecl, importc: "bam_hdr_read",
-    header: "sam.h".}
+    header: "htslib/sam.h".}
 proc bam_hdr_write*(fp: ptr BGZF; h: ptr bam_hdr_t): cint {.cdecl,
-    importc: "bam_hdr_write", header: "sam.h".}
+    importc: "bam_hdr_write", header: "htslib/sam.h".}
 proc bam_hdr_destroy*(h: ptr bam_hdr_t) {.cdecl, importc: "bam_hdr_destroy",
-                                      header: "sam.h".}
+                                      header: "htslib/sam.h".}
 proc bam_name2id*(h: ptr bam_hdr_t; `ref`: cstring): cint {.cdecl,
-    importc: "bam_name2id", header: "sam.h".}
+    importc: "bam_name2id", header: "htslib/sam.h".}
 proc bam_hdr_dup*(h0: ptr bam_hdr_t): ptr bam_hdr_t {.cdecl, importc: "bam_hdr_dup",
-    header: "sam.h".}
-proc bam_init1*(): ptr bam1_t {.cdecl, importc: "bam_init1", header: "sam.h".}
-proc bam_destroy1*(b: ptr bam1_t) {.cdecl, importc: "bam_destroy1", header: "sam.h".}
+    header: "htslib/sam.h".}
+proc bam_init1*(): ptr bam1_t {.cdecl, importc: "bam_init1", header: "htslib/sam.h".}
+proc bam_destroy1*(b: ptr bam1_t) {.cdecl, importc: "bam_destroy1", header: "htslib/sam.h".}
 proc bam_read1*(fp: ptr BGZF; b: ptr bam1_t): cint {.cdecl, importc: "bam_read1",
-    header: "sam.h".}
+    header: "htslib/sam.h".}
 proc bam_write1*(fp: ptr BGZF; b: ptr bam1_t): cint {.cdecl, importc: "bam_write1",
-    header: "sam.h".}
+    header: "htslib/sam.h".}
 proc bam_copy1*(bdst: ptr bam1_t; bsrc: ptr bam1_t): ptr bam1_t {.cdecl,
-    importc: "bam_copy1", header: "sam.h".}
+    importc: "bam_copy1", header: "htslib/sam.h".}
 proc bam_dup1*(bsrc: ptr bam1_t): ptr bam1_t {.cdecl, importc: "bam_dup1",
-    header: "sam.h".}
+    header: "htslib/sam.h".}
 proc bam_cigar2qlen*(n_cigar: cint; cigar: ptr uint32_t): cint {.cdecl,
-    importc: "bam_cigar2qlen", header: "sam.h".}
+    importc: "bam_cigar2qlen", header: "htslib/sam.h".}
 proc bam_cigar2rlen*(n_cigar: cint; cigar: ptr uint32_t): cint {.cdecl,
-    importc: "bam_cigar2rlen", header: "sam.h".}
+    importc: "bam_cigar2rlen", header: "htslib/sam.h".}
 ## !
 ##       @abstract Calculate the rightmost base position of an alignment on the
 ##       reference genome.
@@ -362,13 +362,13 @@ proc bam_cigar2rlen*(n_cigar: cint; cigar: ptr uint32_t): cint {.cdecl,
 ##       string), we return b->core.pos + 1 by convention.
 ##
 
-proc bam_endpos*(b: ptr bam1_t): int32_t {.cdecl, importc: "bam_endpos", header: "sam.h".}
+proc bam_endpos*(b: ptr bam1_t): int32_t {.cdecl, importc: "bam_endpos", header: "htslib/sam.h".}
 proc bam_str2flag*(str: cstring): cint {.cdecl, importc: "bam_str2flag",
-                                     header: "sam.h".}
+                                     header: "htslib/sam.h".}
 ## * returns negative value on error
 
 proc bam_flag2str*(flag: cint): cstring {.cdecl, importc: "bam_flag2str",
-                                      header: "sam.h".}
+                                      header: "htslib/sam.h".}
 ## * The string must be freed by the user
 ## ************************
 ## ** BAM/CRAM indexing ***
@@ -394,18 +394,18 @@ template bam_index_load*(fn: untyped): untyped =
   hts_idx_load((fn), HTS_FMT_BAI)
 
 proc bam_index_build*(fn: cstring; min_shift: cint): cint {.cdecl,
-    importc: "bam_index_build", header: "sam.h".}
+    importc: "bam_index_build", header: "htslib/sam.h".}
 ##  Load BAM (.csi or .bai) or CRAM (.crai) index file.
 
 proc sam_index_load*(fp: ptr htsFile; fn: cstring): ptr hts_idx_t {.cdecl,
-    importc: "sam_index_load", header: "sam.h".}
+    importc: "sam_index_load", header: "htslib/sam.h".}
 template sam_itr_destroy*(iter: untyped): untyped =
   hts_itr_destroy(iter)
 
 proc sam_itr_queryi*(idx: ptr hts_idx_t; tid: cint; beg: cint; `end`: cint): ptr hts_itr_t {.
-    cdecl, importc: "sam_itr_queryi", header: "sam.h".}
+    cdecl, importc: "sam_itr_queryi", header: "htslib/sam.h".}
 proc sam_itr_querys*(idx: ptr hts_idx_t; hdr: ptr bam_hdr_t; region: cstring): ptr hts_itr_t {.
-    cdecl, importc: "sam_itr_querys", header: "sam.h".}
+    cdecl, importc: "sam_itr_querys", header: "htslib/sam.h".}
 template sam_itr_next*(htsfp, itr, r: untyped): untyped =
   hts_itr_next((htsfp).fp.bgzf, (itr), (r), (htsfp))
 
@@ -420,39 +420,39 @@ template sam_close*(fp: untyped): untyped =
   hts_close(fp)
 
 proc sam_open_mode*(mode: cstring; fn: cstring; format: cstring): cint {.cdecl,
-    importc: "sam_open_mode", header: "sam.h".}
+    importc: "sam_open_mode", header: "htslib/sam.h".}
 type
   samFile* = htsFile
 
 proc sam_hdr_parse*(l_text: cint; text: cstring): ptr bam_hdr_t {.cdecl,
-    importc: "sam_hdr_parse", header: "sam.h".}
+    importc: "sam_hdr_parse", header: "htslib/sam.h".}
 proc sam_hdr_read*(fp: ptr samFile): ptr bam_hdr_t {.cdecl, importc: "sam_hdr_read",
-    header: "sam.h".}
+    header: "htslib/sam.h".}
 proc sam_hdr_write*(fp: ptr samFile; h: ptr bam_hdr_t): cint {.cdecl,
-    importc: "sam_hdr_write", header: "sam.h".}
+    importc: "sam_hdr_write", header: "htslib/sam.h".}
 proc sam_parse1*(s: ptr kstring_t; h: ptr bam_hdr_t; b: ptr bam1_t): cint {.cdecl,
-    importc: "sam_parse1", header: "sam.h".}
+    importc: "sam_parse1", header: "htslib/sam.h".}
 proc sam_format1*(h: ptr bam_hdr_t; b: ptr bam1_t; str: ptr kstring_t): cint {.cdecl,
-    importc: "sam_format1", header: "sam.h".}
+    importc: "sam_format1", header: "htslib/sam.h".}
 proc sam_read1*(fp: ptr samFile; h: ptr bam_hdr_t; b: ptr bam1_t): cint {.cdecl,
-    importc: "sam_read1", header: "sam.h".}
+    importc: "sam_read1", header: "htslib/sam.h".}
 proc sam_write1*(fp: ptr samFile; h: ptr bam_hdr_t; b: ptr bam1_t): cint {.cdecl,
-    importc: "sam_write1", header: "sam.h".}
+    importc: "sam_write1", header: "htslib/sam.h".}
 ## ************************************
 ## ** Manipulating auxiliary fields ***
 ## ***********************************
 
 proc bam_aux_get*(b: ptr bam1_t; tag: array[2, char]): ptr uint8_t {.cdecl,
-    importc: "bam_aux_get", header: "sam.h".}
-proc bam_aux2i*(s: ptr uint8_t): int32_t {.cdecl, importc: "bam_aux2i", header: "sam.h".}
-proc bam_aux2f*(s: ptr uint8_t): cdouble {.cdecl, importc: "bam_aux2f", header: "sam.h".}
-proc bam_aux2A*(s: ptr uint8_t): char {.cdecl, importc: "bam_aux2A", header: "sam.h".}
-proc bam_aux2Z*(s: ptr uint8_t): cstring {.cdecl, importc: "bam_aux2Z", header: "sam.h".}
+    importc: "bam_aux_get", header: "htslib/sam.h".}
+proc bam_aux2i*(s: ptr uint8_t): int32_t {.cdecl, importc: "bam_aux2i", header: "htslib/sam.h".}
+proc bam_aux2f*(s: ptr uint8_t): cdouble {.cdecl, importc: "bam_aux2f", header: "htslib/sam.h".}
+proc bam_aux2A*(s: ptr uint8_t): char {.cdecl, importc: "bam_aux2A", header: "htslib/sam.h".}
+proc bam_aux2Z*(s: ptr uint8_t): cstring {.cdecl, importc: "bam_aux2Z", header: "htslib/sam.h".}
 proc bam_aux_append*(b: ptr bam1_t; tag: array[2, char]; `type`: char; len: cint;
                     data: ptr uint8_t) {.cdecl, importc: "bam_aux_append",
-                                      header: "sam.h".}
+                                      header: "htslib/sam.h".}
 proc bam_aux_del*(b: ptr bam1_t; s: ptr uint8_t): cint {.cdecl, importc: "bam_aux_del",
-    header: "sam.h".}
+    header: "htslib/sam.h".}
 ## *************************
 ## ** Pileup and Mpileup ***
 ## ************************
@@ -477,7 +477,7 @@ when not defined(BAM_NO_PILEUP):
   ##  overhead.
   ##
   type
-    bam_pileup1_t* {.importc: "bam_pileup1_t", header: "sam.h".} = object
+    bam_pileup1_t* {.importc: "bam_pileup1_t", header: "htslib/sam.h".} = object
       b* {.importc: "b".}: ptr bam1_t
       qpos* {.importc: "qpos".}: int32_t
       indel* {.importc: "indel".}: cint
@@ -490,12 +490,12 @@ when not defined(BAM_NO_PILEUP):
 
     bam_plp_auto_f* = proc (data: pointer; b: ptr bam1_t): cint {.cdecl.}
   type
-    __bam_plp_t* {.importc: "__bam_plp_t", header: "sam.h".} = object
+    __bam_plp_t* {.importc: "__bam_plp_t", header: "htslib/sam.h".} = object
 
   type
     bam_plp_t* = ptr __bam_plp_t
   type
-    __bam_mplp_t* {.importc: "__bam_mplp_t", header: "sam.h".} = object
+    __bam_mplp_t* {.importc: "__bam_mplp_t", header: "htslib/sam.h".} = object
 
   type
     bam_mplp_t* = ptr __bam_mplp_t
@@ -506,21 +506,21 @@ when not defined(BAM_NO_PILEUP):
   ##   @data:      user data to pass to @func
   ##
   proc bam_plp_init*(`func`: bam_plp_auto_f; data: pointer): bam_plp_t {.cdecl,
-      importc: "bam_plp_init", header: "sam.h".}
+      importc: "bam_plp_init", header: "htslib/sam.h".}
   proc bam_plp_destroy*(iter: bam_plp_t) {.cdecl, importc: "bam_plp_destroy",
-                                        header: "sam.h".}
+                                        header: "htslib/sam.h".}
   proc bam_plp_push*(iter: bam_plp_t; b: ptr bam1_t): cint {.cdecl,
-      importc: "bam_plp_push", header: "sam.h".}
+      importc: "bam_plp_push", header: "htslib/sam.h".}
   proc bam_plp_next*(iter: bam_plp_t; _tid: ptr cint; _pos: ptr cint; _n_plp: ptr cint): ptr bam_pileup1_t {.
-      cdecl, importc: "bam_plp_next", header: "sam.h".}
+      cdecl, importc: "bam_plp_next", header: "htslib/sam.h".}
   proc bam_plp_auto*(iter: bam_plp_t; _tid: ptr cint; _pos: ptr cint; _n_plp: ptr cint): ptr bam_pileup1_t {.
-      cdecl, importc: "bam_plp_auto", header: "sam.h".}
+      cdecl, importc: "bam_plp_auto", header: "htslib/sam.h".}
   proc bam_plp_set_maxcnt*(iter: bam_plp_t; maxcnt: cint) {.cdecl,
-      importc: "bam_plp_set_maxcnt", header: "sam.h".}
+      importc: "bam_plp_set_maxcnt", header: "htslib/sam.h".}
   proc bam_plp_reset*(iter: bam_plp_t) {.cdecl, importc: "bam_plp_reset",
-                                      header: "sam.h".}
+                                      header: "htslib/sam.h".}
   proc bam_mplp_init*(n: cint; `func`: bam_plp_auto_f; data: ptr pointer): bam_mplp_t {.
-      cdecl, importc: "bam_mplp_init", header: "sam.h".}
+      cdecl, importc: "bam_mplp_init", header: "htslib/sam.h".}
   ## *
   ##   bam_mplp_init_overlaps() - if called, mpileup will detect overlapping
   ##   read pairs and for each base pair set the base quality of the
@@ -530,11 +530,11 @@ when not defined(BAM_NO_PILEUP):
   ##   it is multiplied by 0.8.
   ##
   proc bam_mplp_init_overlaps*(iter: bam_mplp_t) {.cdecl,
-      importc: "bam_mplp_init_overlaps", header: "sam.h".}
+      importc: "bam_mplp_init_overlaps", header: "htslib/sam.h".}
   proc bam_mplp_destroy*(iter: bam_mplp_t) {.cdecl, importc: "bam_mplp_destroy",
-      header: "sam.h".}
+      header: "htslib/sam.h".}
   proc bam_mplp_set_maxcnt*(iter: bam_mplp_t; maxcnt: cint) {.cdecl,
-      importc: "bam_mplp_set_maxcnt", header: "sam.h".}
+      importc: "bam_mplp_set_maxcnt", header: "htslib/sam.h".}
   proc bam_mplp_auto*(iter: bam_mplp_t; _tid: ptr cint; _pos: ptr cint; n_plp: ptr cint;
                      plp: ptr ptr bam_pileup1_t): cint {.cdecl,
-      importc: "bam_mplp_auto", header: "sam.h".}
+      importc: "bam_mplp_auto", header: "htslib/sam.h".}
