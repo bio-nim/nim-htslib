@@ -38,6 +38,9 @@ template usePtr*[T] =
   template `-`(p: ptr T, off: SomeInteger): ptr T =
     cast[ptr type(p[])](cast[ByteAddress](p) -% int(off) * sizeof(p[]))
 
+  template `-`(p: ptr T, off: ptr T): ByteAddress =
+    (cast[ByteAddress](p) -% cast[ByteAddress](off))
+
   template `-=`(p: ptr T, off: SomeInteger) =
     p = p - int(off)
 

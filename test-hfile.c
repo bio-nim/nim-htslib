@@ -77,7 +77,7 @@ char *slurp(const char *filename)
 
 hFILE *fin = NULL;
 hFILE *fout = NULL;
-char const* arbitrary_existing_fn = "/Users/cdunn2001/repo/gh/htslib/vcf.c";
+char const* arbitrary_existing_fn = "vcf.c";
 
 void reopen(const char *infname, const char *outfname)
 {

@@ -27,18 +27,22 @@
 ##    directly; you should imagine that hFILE is an opaque incomplete type.
 
 type
+  off_t* = int
   hFILE_backend* {.importc: "hFILE_backend", header: "htslib/hfile.h".} = object
 
   hFILE* {.importc: "hFILE", header: "htslib/hfile.h".} = object
-    buffer* {.importc: "buffer".}: cstring
-    begin* {.importc: "begin".}: cstring
-    `end`* {.importc: "end".}: cstring
-    limit* {.importc: "limit".}: cstring
+    buffer* {.importc: "buffer".}: ptr char
+    begin* {.importc: "begin".}: ptr char
+    `end`* {.importc: "end".}: ptr char
+    limit* {.importc: "limit".}: ptr char
     backend* {.importc: "backend".}: ptr hFILE_backend
     offset* {.importc: "offset".}: off_t
-    at_eof* {.importc: "at_eof".} {.bitsize: 1.}: cint
+    at_eof* {.importc: "at_eof", bitsize: 1.}: cint
     has_errno* {.importc: "has_errno".}: cint
 
+from common import nil
+common.usePtr[char]()
+#common.usePtr[hFile]()
 
 ## !
 ##   @abstract  Open the named file or URL as a stream
@@ -106,8 +110,12 @@ proc htell*(fp: ptr hFILE): off_t {.inline, cdecl.} =
 ##
 
 proc hgetc*(fp: ptr hFILE): cint {.inline, cdecl.} =
-  proc hgetc2(a2: ptr hFILE): cint {.cdecl.}
-  return if (fp.`end` > fp.begin): cast[cuchar]((inc(fp.begin))[]) else: hgetc2(fp)
+  proc hgetc2(a2: ptr hFILE): cint {.cdecl, importc.}
+  if (fp.`end` > fp.begin):
+    result = cint((fp.begin)[])
+    fp.begin += 1
+  else:
+    result = hgetc2(fp)
 
 ## !
 ##   @abstract  Peek at characters to be read without removing them from buffers
@@ -121,7 +129,7 @@ proc hgetc*(fp: ptr hFILE): cint {.inline, cdecl.} =
 ##     and will be returned by later hread() etc calls.
 ##
 
-proc hpeek*(fp: ptr hFILE; buffer: pointer; nbytes: csize): ssize_t {.cdecl,
+proc hpeek*(fp: ptr hFILE; buffer: pointer; nbytes: csize): csize {.cdecl,
     importc: "hpeek", header: "htslib/hfile.h".}
 ## !
 ##   @abstract  Read a block of characters from the file
@@ -130,23 +138,28 @@ proc hpeek*(fp: ptr hFILE; buffer: pointer; nbytes: csize): ssize_t {.cdecl,
 ##     by EOF or I/O errors.
 ##
 
-proc hread*(fp: ptr hFILE; buffer: pointer; nbytes: csize): ssize_t {.inline, cdecl.} =
-  proc hread2(a2: ptr hFILE; a3: pointer; a4: csize; a5: csize): ssize_t {.cdecl.}
-  var n: csize
+proc hread*(fp: ptr hFILE; buffer: pointer; nbytes: csize): csize {.inline, cdecl.} =
+  proc hread2(a2: ptr hFILE; a3: pointer; a4: csize; a5: csize): csize {.cdecl, importc, header: "htslib/hfile.h".}
+  var n: csize = fp.`end` - fp.begin;
   if n > nbytes: n = nbytes
-  memcpy(buffer, fp.begin, n)
-  inc(fp.begin, n)
-  return if (n == nbytes): cast[ssize_t](n) else: hread2(fp, buffer, nbytes, n)
+  copyMem(buffer, fp.begin, n)
+  #inc(fp.begin, n)
+  fp.begin += n
+  return if (n == nbytes): cast[csize](n) else: hread2(fp, buffer, nbytes, n)
 
 ## !
 ##   @abstract  Write a character to the stream
 ##   @return    The character written, or EOF if an error occurred.
 ##
 
-proc hputc*(c: cint; fp: ptr hFILE): cint {.inline, cdecl.} =
-  proc hputc2(a2: cint; a3: ptr hFILE): cint {.cdecl.}
-  if fp.begin < fp.limit: (inc(fp.begin))[] = c
-  else: c = hputc2(c, fp)
+proc hputc*(carg: cint; fp: ptr hFILE): cint {.inline, cdecl.} =
+  var c = carg
+  proc hputc2(a2: cint; a3: ptr hFILE): cint {.cdecl, importc.}
+  if fp.begin < fp.limit:
+    fp.begin[] = c.char
+    fp.begin += 1
+  else:
+    c = hputc2(c, fp)
   return c
 
 ## !
@@ -155,14 +168,19 @@ proc hputc*(c: cint; fp: ptr hFILE): cint {.inline, cdecl.} =
 ##
 
 proc hputs*(text: cstring; fp: ptr hFILE): cint {.inline, cdecl.} =
-  proc hputs2(a2: cstring; a3: csize; a4: csize; a5: ptr hFILE): cint {.cdecl.}
+  proc hputs2(a2: cstring; a3: csize; a4: csize; a5: ptr hFILE): cint {.cdecl, importc, header:"htslib/hfile.h".}
   var
     nbytes: csize
     n: csize
+  nbytes = len(text)
+  n = fp.limit - fp.begin
   if n > nbytes: n = nbytes
-  memcpy(fp.begin, text, n)
-  inc(fp.begin, n)
+  copyMem(fp.begin, text, n)
+  #inc(fp.begin, n)
+  fp.begin += n
   return if (n == nbytes): 0 else: hputs2(text, nbytes, n, fp)
+
+proc hgets*(buffer: pointer, size: csize, fp: ptr hFILE): ptr char {.cdecl, importc, header: "htslib/hfile.h".}
 
 ## !
 ##   @abstract  Write a block of characters to the file
@@ -170,13 +188,13 @@ proc hputs*(text: cstring; fp: ptr hFILE): cint {.inline, cdecl.} =
 ##   @notes     In the absence of I/O errors, the full nbytes will be written.
 ##
 
-proc hwrite*(fp: ptr hFILE; buffer: pointer; nbytes: csize): ssize_t {.inline, cdecl.} =
-  proc hwrite2(a2: ptr hFILE; a3: pointer; a4: csize; a5: csize): ssize_t {.cdecl.}
-  var n: csize
+proc hwrite*(fp: ptr hFILE; buffer: pointer; nbytes: csize): csize {.inline, cdecl.} =
+  proc hwrite2(a2: ptr hFILE; a3: pointer; a4: csize; a5: csize): csize {.cdecl, importc, header:"htslib/hfile.h".}
+  var n: csize = fp.limit - fp.begin
   if n > nbytes: n = nbytes
-  memcpy(fp.begin, buffer, n)
-  inc(fp.begin, n)
-  return if (n == nbytes): cast[ssize_t](n) else: hwrite2(fp, buffer, nbytes, n)
+  copyMem(fp.begin, buffer, n)
+  fp.begin += n
+  return if (n == nbytes): n else: hwrite2(fp, buffer, nbytes, n)
 
 ## !
 ##   @abstract  For writing streams, flush buffered output to the underlying stream
