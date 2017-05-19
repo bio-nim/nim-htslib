@@ -401,30 +401,27 @@ proc hts_idx_seqnames*(idx: ptr hts_idx_t; n: ptr cint; getid: hts_id2name_f;
 
 proc hts_reg2bin*(beg: int64; `end`: int64; min_shift: cint; n_lvls: cint): cint {.inline, cdecl.} =
   var
-    l: cint
-    s: cint
-    t: cint
+    L: cint = n_lvls
+    s: cint = min_shift
+    t: cint = (((1 shl ((n_lvls shl 1) + n_lvls)) - 1) div 7)
   var fin = `end`
   dec(fin)
-  l = n_lvls
-  while l > 0:
+  while L > 0:
     if beg shr s == fin shr s: return t + (beg shr s).cint
-    dec(l)
+    dec(L)
     inc(s, 3)
-    dec(t, 1 shl ((l shl 1) + l))
+    dec(t, 1 shl ((L shl 1) + L))
   return 0
 
 proc hts_bin_bot*(bin: cint; n_lvls: cint): cint {.inline, cdecl.} =
   var
-    l: cint
-    b: cint
-  l = 0
-  b = bin
+    L: cint = 0
+    b: cint = bin
   while b != 0:
     ##  compute the level of bin
-    inc(l)
+    inc(L)
     b = hts_bin_parent(b)
-  return ((bin - hts_bin_first(l)) shl (n_lvls - l) * 3).cint
+  return ((bin - hts_bin_first(L)) shl (n_lvls - L) * 3).cint
 
 ## *************
 ##  Endianness *

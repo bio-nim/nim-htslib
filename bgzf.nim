@@ -90,8 +90,10 @@ type
 
 proc bgzf_dopen*(fd: cint; mode: cstring): ptr BGZF {.cdecl, importc: "bgzf_dopen",
     header: "htslib/bgzf.h".}
-template bgzf_fdopen*(fd, mode: untyped): untyped =
-  bgzf_dopen((fd), (mode))     ##  for backward compatibility
+
+var bgzf_fdopen* = bgzf_dopen
+#template bgzf_fdopen*(fd, mode: untyped): untyped =
+#  bgzf_dopen((fd), (mode))     ##  for backward compatibility
 
 ## *
 ##  Open the specified file for reading or writing.
