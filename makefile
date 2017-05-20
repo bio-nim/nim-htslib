@@ -10,7 +10,8 @@ CFLAGS+=-g -Wall
 export LDFLAGS CFLAGS MY_FASTA
 
 default: run-main
-test: vcftest nvcftest hfiletest nhfiletest # both Nim and C
+# test both Nim and C
+test: vcftest nvcftest hfiletest nhfiletest samtest nsamtest
 submodule:
 	git submodule update --init
 build-htslib:
@@ -29,6 +30,10 @@ hfiletest: test-hfile.exe
 	cd ../htslib; ${THISDIR}/test-hfile.exe
 nhfiletest: test_hfile.exe
 	cd ../htslib; ${THISDIR}/test_hfile.exe
+samtest: test-sam.exe
+	cd ../htslib; ${THISDIR}/test-sam.exe
+nsamtest: test_sam.exe
+	cd ../htslib; ${THISDIR}/test_sam.exe
 # We are gradually wrapping the headers we actually use.
 # Someday we might actually convert the underlying C code too.
 cp:
