@@ -403,7 +403,7 @@ proc hts_reg2bin*(beg: int64; `end`: int64; min_shift: cint; n_lvls: cint): cint
   var
     L: cint = n_lvls
     s: cint = min_shift
-    t: cint = (((1 shl ((n_lvls shl 1) + n_lvls)) - 1) div 7)
+    t: cint = (((1 shl ((n_lvls shl 1) + n_lvls)) - 1) div 7).cint
   var fin = `end`
   dec(fin)
   while L > 0:
