@@ -1,10 +1,10 @@
 # Package
 
-version       = "0.14.1"
+version       = "0.1.0"
 author        = "Christopher Dunn"
-description   = "Nim wrapper for samtools/htslib"
+description   = "Nim wrapper for htslib (maybe samtools someday)"
 license       = "MIT"
 
 # Dependencies
 
-requires "nim >= 0.16.0"
+requires "nim >= 0.17.0"

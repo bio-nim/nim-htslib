@@ -1,6 +1,7 @@
 THISDIR=$(shell pwd)
 # TODO: Fix THISDIR
-NIMFLAGS?=--verbosity:2
+#NIMFLAGS?=--verbosity:2
+NIMFLAGS?=--listCmd
 HEADERS=bgzf.h faidx.h hfile.h hts.h kstring.h sam.h vcf.h
 MY_FASTA?=data/p_ctg.fa
 #LDFLAGS+=-Lpbbam/third-party/htslib/build/ -lhts -lz
