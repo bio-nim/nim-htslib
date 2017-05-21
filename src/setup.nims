@@ -18,4 +18,5 @@ switch("passC", passC)
 switch("passL", passL)
 
 hint("XDeclaredButNotUsed", false)
+warning("SmallLshouldNotBeUsed", false)
 --debugger:native
