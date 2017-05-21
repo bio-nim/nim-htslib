@@ -2,6 +2,8 @@ THISDIR=$(shell pwd)
 # TODO: Fix THISDIR
 #NIMFLAGS?=--verbosity:2
 NIMFLAGS?=--listCmd
+NIMFLAGS+=--d:release
+#NIMFLAGS+=--d:debug --debugger:native
 
 default: run-main
 
@@ -25,3 +27,6 @@ run-%: %.exe
 	nim c ${NIMFLAGS} --out:$*.exe $*
 %.exe: %.c
 	${LINK.c} $^ ${LOADLIBES} ${LDLIBS} -o $@
+clean:
+	rm -f *.exe
+	rm -rf nimcache/

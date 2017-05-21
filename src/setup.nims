@@ -11,7 +11,7 @@ let sha1 = gorge("it rev-parse HEAD")
 #echo sha1
 let passC = capture("pkg-config --cflags htslib", "", sha1)
 #echo passC
-let passL = capture("pkg-config --libs htslib", "", sha1)
+let passL = capture("pkg-config --libs --static htslib", "", sha1)
 #echo passL
 
 switch("passC", passC)
@@ -19,4 +19,3 @@ switch("passL", passL)
 
 hint("XDeclaredButNotUsed", false)
 warning("SmallLshouldNotBeUsed", false)
---debugger:native
