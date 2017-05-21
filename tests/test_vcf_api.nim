@@ -22,9 +22,10 @@
 ## LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 ## FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 ## DEALINGS IN THE SOFTWARE.
+from htslib/kstring import nil
 from strutils import `%`
-from kstring import nil
-import wrap, common, hts, vcf
+import htslib/common, htslib/hts, htslib/vcf
+import wrap
 import os
 
 usePtr[int32]()

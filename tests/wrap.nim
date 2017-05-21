@@ -1,7 +1,7 @@
 # vim: sw=2 ts=2 sts=2 tw=80 et:
 {.experimental.}
-from common import nil
-from hts import nil
+from htslib/common import nil
+from htslib/hts import nil
 from strutils import `%`
 
 type
