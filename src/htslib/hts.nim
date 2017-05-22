@@ -1,20 +1,21 @@
+# vim: sw=2 ts=2 sts=2 tw=80 et:
 ##   hts.h -- format-neutral I/O, indexing, and iterator API functions.
-## 
+##
 ##     Copyright (C) 2012-2014 Genome Research Ltd.
 ##     Copyright (C) 2012 Broad Institute.
-## 
+##
 ##     Author: Heng Li <lh3@sanger.ac.uk>
-## 
+##
 ## Permission is hereby granted, free of charge, to any person obtaining a copy
 ## of this software and associated documentation files (the "Software"), to deal
 ## in the Software without restriction, including without limitation the rights
 ## to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 ## copies of the Software, and to permit persons to whom the Software is
 ## furnished to do so, subject to the following conditions:
-## 
+##
 ## The above copyright notice and this permission notice shall be included in
 ## all copies or substantial portions of the Software.
-## 
+##
 ## THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 ## IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 ## FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -26,11 +27,11 @@
 from kstring import kstring_t
 
 type
-  cram_fd* {.importc: "struct cram_fd", header: "hts.h".} = object
-  hFILE* {.importc: "struct hFILE", header: "hts.h".} = object
-  BGZF* {.importc: "BGZF", header: "hts.h".} = object
-#[  
-  kstring_t* {.importc: "kstring_t", header: "hts.h".} = object
+  cram_fd* {.importc: "struct cram_fd", header: "htslib/hts.h".} = object
+  hFILE* {.importc: "struct hFILE", header: "htslib/hts.h".} = object
+  BGZF* {.importc: "BGZF", header: "htslib/hts.h".} = object
+#[
+  kstring_t* {.importc: "kstring_t", header: "htslib/hts.h".} = object
     L* {.importc: "l".}: csize
     m* {.importc: "m".}: csize
     s* {.importc: "s".}: cstring
@@ -48,10 +49,10 @@ proc kroundup32*[T](x: var T) =
 ## *
 ##  hts_expand()  - expands memory block pointed to by $ptr;
 ##  hts_expand0()   the latter sets the newly allocated part to 0.
-## 
+##
 ##  @param n     requested number of elements of type type_t
 ##  @param m     size of memory allocated
-## 
+##
 
 template hts_expand*(type_t, n, m, `ptr`: untyped): void =
   if (n) > (m):
@@ -96,7 +97,7 @@ type
 
 
 type
-  htsFormat* {.importc: "htsFormat", header: "hts.h".} = object
+  htsFormat* {.importc: "htsFormat", header: "htslib/hts.h".} = object
     category* {.importc: "category".}: htsFormatCategory
     format* {.importc: "format".}: htsExactFormat
     compression* {.importc: "compression".}: htsCompression
@@ -117,7 +118,7 @@ type
     hfile* {.importc: "hfile".}: ptr hFILE
     voidp* {.importc: "voidp".}: pointer
 
-  htsFile* {.importc: "htsFile", header: "hts.h", packed.} = object
+  htsFile* {.importc: "htsFile", header: "htslib/hts.h", packed.} = object
     is_bin* {.importc: "is_bin", bitsize: 1.}: uint32
     is_write* {.importc: "is_write", bitsize: 1.}: uint32
     is_be* {.importc: "is_be", bitsize: 1.}: uint32
@@ -156,50 +157,50 @@ type
 ##  Exported functions *
 ## ********************
 
-var hts_verbose* {.importc: "hts_verbose", header: "hts.h".}: cint
+var hts_verbose* {.importc: "hts_verbose", header: "htslib/hts.h".}: cint
 
 ## ! @abstract Table for converting a nucleotide character to 4-bit encoding.
 ## The input character may be either an IUPAC ambiguity code, '=' for 0, or
 ## '0'/'1'/'2'/'3' for a result of 1/2/4/8.  The result is encoded as 1/2/4/8
 ## for A/C/G/T or combinations of these bits for ambiguous bases.
-## 
+##
 
-var seq_nt16_table* {.importc: "seq_nt16_table", header: "hts.h".}: array[256, cuchar]
+var seq_nt16_table* {.importc: "seq_nt16_table", header: "htslib/hts.h".}: array[256, cuchar]
 
 ## ! @abstract Table for converting a 4-bit encoded nucleotide to an IUPAC
 ## ambiguity code letter (or '=' when given 0).
-## 
+##
 
-var seq_nt16_str* {.importc: "seq_nt16_str", header: "hts.h".}: ptr char
+var seq_nt16_str* {.importc: "seq_nt16_str", header: "htslib/hts.h".}: ptr char
 
 ## ! @abstract Table for converting a 4-bit encoded nucleotide to about 2 bits.
 ## Returns 0/1/2/3 for 1/2/4/8 (i.e., A/C/G/T), or 4 otherwise (0 or ambiguous).
-## 
+##
 
-var seq_nt16_int* {.importc: "seq_nt16_int", header: "hts.h".}: ptr cint
+var seq_nt16_int* {.importc: "seq_nt16_int", header: "htslib/hts.h".}: ptr cint
 
 ## !
 ##   @abstract  Get the htslib version number
 ##   @return    For released versions, a string like "N.N[.N]"; or git describe
 ##   output if using a library built within a Git repository.
-## 
+##
 
-proc hts_version*(): cstring {.cdecl, importc: "hts_version", header: "hts.h".}
+proc hts_version*(): cstring {.cdecl, importc: "hts_version", header: "htslib/hts.h".}
 ## !
 ##   @abstract    Determine format by peeking at the start of a file
 ##   @param fp    File opened for reading, positioned at the beginning
 ##   @param fmt   Format structure that will be filled out on return
 ##   @return      0 for success, or negative if an error occurred.
-## 
+##
 
 proc hts_detect_format*(fp: ptr hFILE; fmt: ptr htsFormat): cint {.cdecl,
-    importc: "hts_detect_format", header: "hts.h".}
+    importc: "hts_detect_format", header: "htslib/hts.h".}
 ## !
 ##   @abstract    Get a human-readable description of the file format
-## 
+##
 
 proc hts_format_description*(format: ptr htsFormat): cstring {.cdecl,
-    importc: "hts_format_description", header: "hts.h".}
+    importc: "hts_format_description", header: "htslib/hts.h".}
 ## !
 ##   @abstract       Open a SAM/BAM/CRAM/VCF/BCF/etc file
 ##   @param fn       The file name or "-" for stdin/stdout
@@ -223,47 +224,47 @@ proc hts_format_description*(format: ptr htsFormat): cstring {.cdecl,
 ##       [rw]u .. uncompressed BCF
 ##       [rw]z .. compressed VCF
 ##       [rw]  .. uncompressed VCF
-## 
+##
 
 proc hts_open*(fn: cstring; mode: cstring): ptr htsFile {.cdecl, importc: "hts_open",
-    header: "hts.h".}
+    header: "htslib/hts.h".}
 ## !
 ##   @abstract       Open an existing stream as a SAM/BAM/CRAM/VCF/BCF/etc file
 ##   @param fn       The already-open file handle
 ##   @param mode     Open mode, as per hts_open()
-## 
+##
 
 proc hts_hopen*(fp: ptr hFILE; fn: cstring; mode: cstring): ptr htsFile {.cdecl,
-    importc: "hts_hopen", header: "hts.h".}
+    importc: "hts_hopen", header: "htslib/hts.h".}
 ## !
 ##   @abstract  Close a file handle, flushing buffered data for output streams
 ##   @param fp  The file handle to be closed
 ##   @return    0 for success, or negative if an error occurred.
-## 
+##
 
-proc hts_close*(fp: ptr htsFile): cint {.cdecl, importc: "hts_close", header: "hts.h".}
+proc hts_close*(fp: ptr htsFile): cint {.cdecl, importc: "hts_close", header: "htslib/hts.h".}
 ## !
 ##   @abstract  Returns the file's format information
 ##   @param fp  The file handle
 ##   @return    Read-only pointer to the file's htsFormat.
-## 
+##
 
 proc hts_get_format*(fp: ptr htsFile): ptr htsFormat {.cdecl,
-    importc: "hts_get_format", header: "hts.h".}
+    importc: "hts_get_format", header: "htslib/hts.h".}
 ## !
 ##   @abstract  Sets a specified CRAM option on the open file handle.
 ##   @param fp  The file handle open the open file.
 ##   @param opt The CRAM_OPT_* option.
 ##   @param ... Optional arguments, dependent on the option used.
 ##   @return    0 for success, or negative if an error occurred.
-## 
+##
 
 proc hts_set_opt*(fp: ptr htsFile; opt: cram_option): cint {.varargs, cdecl,
-    importc: "hts_set_opt", header: "hts.h".}
+    importc: "hts_set_opt", header: "htslib/hts.h".}
 proc hts_getline*(fp: ptr htsFile; delimiter: cint; str: ptr kstring_t): cint {.cdecl,
-    importc: "hts_getline", header: "hts.h".}
+    importc: "hts_getline", header: "htslib/hts.h".}
 proc hts_readlines*(fn: cstring; n: ptr cint): cstringArray {.cdecl,
-    importc: "hts_readlines", header: "hts.h".}
+    importc: "hts_readlines", header: "htslib/hts.h".}
 ## !
 ##     @abstract       Parse comma-separated list or read list from a file
 ##     @param list     File name or comma-separated list
@@ -271,30 +272,30 @@ proc hts_readlines*(fn: cstring; n: ptr cint): cstringArray {.cdecl,
 ##     @param _n       Size of the output array (number of items read)
 ##     @return         NULL on failure or pointer to newly allocated array of
 ##                     strings
-## 
+##
 
 proc hts_readlist*(fn: cstring; is_file: cint; n: ptr cint): cstringArray {.cdecl,
-    importc: "hts_readlist", header: "hts.h".}
+    importc: "hts_readlist", header: "htslib/hts.h".}
 ## !
 ##   @abstract  Create extra threads to aid compress/decompression for this file
 ##   @param fp  The file handle
 ##   @param n   The number of worker threads to create
 ##   @return    0 for success, or negative if an error occurred.
 ##   @notes     THIS THREADING API IS LIKELY TO CHANGE IN FUTURE.
-## 
+##
 
 proc hts_set_threads*(fp: ptr htsFile; n: cint): cint {.cdecl,
-    importc: "hts_set_threads", header: "hts.h".}
+    importc: "hts_set_threads", header: "htslib/hts.h".}
 ## !
 ##   @abstract  Set .fai filename for a file opened for reading
 ##   @return    0 for success, negative on failure
 ##   @discussion
 ##       Called before *_hdr_read(), this provides the name of a .fai file
 ##       used to provide a reference list if the htsFile contains no @SQ headers.
-## 
+##
 
 proc hts_set_fai_filename*(fp: ptr htsFile; fn_aux: cstring): cint {.cdecl,
-    importc: "hts_set_fai_filename", header: "hts.h".}
+    importc: "hts_set_fai_filename", header: "htslib/hts.h".}
 ## ***********
 ##  Indexing *
 ## **********
@@ -307,7 +308,7 @@ proc hts_set_fai_filename*(fp: ptr htsFile; fn_aux: cstring): cint {.cdecl,
 ##  - HTS_IDX_NONE   always returns "no more alignment records"
 ## When one of these special tid values is used, beg and end are ignored.
 ## When REST or NONE is used, idx is also ignored and may be NULL.
-## 
+##
 
 const
   HTS_IDX_NOCOOR* = (- 2)
@@ -320,20 +321,20 @@ const
   HTS_FMT_CRAI* = 3
 
 type
-  hts_idx_t* {.importc: "struct __hts_idx_t", header: "hts.h".} = object
-  
-  INNER_C_STRUCT_3954569502* {.importc: "no_name", header: "hts.h".} = object
+  hts_idx_t* {.importc: "struct __hts_idx_t", header: "htslib/hts.h".} = object
+
+  INNER_C_STRUCT_3954569502* {.importc: "no_name", header: "htslib/hts.h".} = object
     n* {.importc: "n".}: cint
     m* {.importc: "m".}: cint
     a* {.importc: "a".}: ptr cint
 
-  hts_pair64_t* {.importc: "hts_pair64_t", header: "hts.h".} = object
+  hts_pair64_t* {.importc: "hts_pair64_t", header: "htslib/hts.h".} = object
     u* {.importc: "u".}: uint64
     v* {.importc: "v".}: uint64
 
   hts_readrec_func* = proc (fp: ptr BGZF; data: pointer; r: pointer; tid: ptr cint;
                          beg: ptr cint; `end`: ptr cint): cint {.cdecl.}
-  hts_itr_t* {.importc: "hts_itr_t", header: "hts.h".} = object
+  hts_itr_t* {.importc: "hts_itr_t", header: "htslib/hts.h".} = object
     read_rest* {.importc: "read_rest", bitsize: 1.}: uint32
     finished* {.importc: "finished", bitsize: 1.}: uint32
     dummy* {.importc: "dummy", bitsize: 29.}: uint32
@@ -355,34 +356,34 @@ template hts_bin_parent*(v: untyped): untyped =
   (((v) - 1) shr 3)
 
 proc hts_idx_init*(n: cint; fmt: cint; offset0: uint64; min_shift: cint; n_lvls: cint): ptr hts_idx_t {.
-    cdecl, importc: "hts_idx_init", header: "hts.h".}
+    cdecl, importc: "hts_idx_init", header: "htslib/hts.h".}
 proc hts_idx_destroy*(idx: ptr hts_idx_t) {.cdecl, importc: "hts_idx_destroy",
-                                        header: "hts.h".}
+                                        header: "htslib/hts.h".}
 proc hts_idx_push*(idx: ptr hts_idx_t; tid: cint; beg: cint; `end`: cint;
                   offset: uint64; is_mapped: cint): cint {.cdecl,
-    importc: "hts_idx_push", header: "hts.h".}
+    importc: "hts_idx_push", header: "htslib/hts.h".}
 proc hts_idx_finish*(idx: ptr hts_idx_t; final_offset: uint64) {.cdecl,
-    importc: "hts_idx_finish", header: "hts.h".}
+    importc: "hts_idx_finish", header: "htslib/hts.h".}
 proc hts_idx_save*(idx: ptr hts_idx_t; fn: cstring; fmt: cint) {.cdecl,
-    importc: "hts_idx_save", header: "hts.h".}
+    importc: "hts_idx_save", header: "htslib/hts.h".}
 proc hts_idx_load*(fn: cstring; fmt: cint): ptr hts_idx_t {.cdecl,
-    importc: "hts_idx_load", header: "hts.h".}
+    importc: "hts_idx_load", header: "htslib/hts.h".}
 proc hts_idx_get_meta*(idx: ptr hts_idx_t; l_meta: ptr cint): ptr uint8 {.cdecl,
-    importc: "hts_idx_get_meta", header: "hts.h".}
+    importc: "hts_idx_get_meta", header: "htslib/hts.h".}
 proc hts_idx_set_meta*(idx: ptr hts_idx_t; l_meta: cint; meta: ptr uint8; is_copy: cint) {.
-    cdecl, importc: "hts_idx_set_meta", header: "hts.h".}
+    cdecl, importc: "hts_idx_set_meta", header: "htslib/hts.h".}
 proc hts_idx_get_stat*(idx: ptr hts_idx_t; tid: cint; mapped: ptr uint64;
                       unmapped: ptr uint64): cint {.cdecl,
-    importc: "hts_idx_get_stat", header: "hts.h".}
+    importc: "hts_idx_get_stat", header: "htslib/hts.h".}
 proc hts_idx_get_n_no_coor*(idx: ptr hts_idx_t): uint64 {.cdecl,
-    importc: "hts_idx_get_n_no_coor", header: "hts.h".}
+    importc: "hts_idx_get_n_no_coor", header: "htslib/hts.h".}
 proc hts_parse_reg*(s: cstring; beg: ptr cint; `end`: ptr cint): cstring {.cdecl,
-    importc: "hts_parse_reg", header: "hts.h".}
+    importc: "hts_parse_reg", header: "htslib/hts.h".}
 proc hts_itr_query*(idx: ptr hts_idx_t; tid: cint; beg: cint; `end`: cint;
                    readrec: hts_readrec_func): ptr hts_itr_t {.cdecl,
-    importc: "hts_itr_query", header: "hts.h".}
+    importc: "hts_itr_query", header: "htslib/hts.h".}
 proc hts_itr_destroy*(iter: ptr hts_itr_t) {.cdecl, importc: "hts_itr_destroy",
-    header: "hts.h".}
+    header: "htslib/hts.h".}
 type
   hts_name2id_f* = proc (a2: pointer; a3: cstring): cint {.cdecl.}
   hts_id2name_f* = proc (a2: pointer; a3: cint): cstring {.cdecl.}
@@ -392,39 +393,36 @@ type
 proc hts_itr_querys*(idx: ptr hts_idx_t; reg: cstring; getid: hts_name2id_f;
                     hdr: pointer; itr_query: hts_itr_query_func;
                     readrec: hts_readrec_func): ptr hts_itr_t {.cdecl,
-    importc: "hts_itr_querys", header: "hts.h".}
-proc hts_itr_next*(fp: ptr BGZF; iter: ptr hts_itr_t; r: pointer; data: pointer): cint {.cdecl, importc: "hts_itr_next", header: "hts.h".}
+    importc: "hts_itr_querys", header: "htslib/hts.h".}
+proc hts_itr_next*(fp: ptr BGZF; iter: ptr hts_itr_t; r: pointer; data: pointer): cint {.cdecl, importc: "hts_itr_next", header: "htslib/hts.h".}
 proc hts_idx_seqnames*(idx: ptr hts_idx_t; n: ptr cint; getid: hts_id2name_f;
                       hdr: pointer): cstringArray {.cdecl,
-    importc: "hts_idx_seqnames", header: "hts.h".}
+    importc: "hts_idx_seqnames", header: "htslib/hts.h".}
 ##  free only the array, not the values
 
 proc hts_reg2bin*(beg: int64; `end`: int64; min_shift: cint; n_lvls: cint): cint {.inline, cdecl.} =
   var
-    l: cint
-    s: cint
-    t: cint
+    L: cint = n_lvls
+    s: cint = min_shift
+    t: cint = (((1 shl ((n_lvls shl 1) + n_lvls)) - 1) div 7).cint
   var fin = `end`
   dec(fin)
-  l = n_lvls
-  while l > 0:
+  while L > 0:
     if beg shr s == fin shr s: return t + (beg shr s).cint
-    dec(l)
+    dec(L)
     inc(s, 3)
-    dec(t, 1 shl ((l shl 1) + l))
+    dec(t, 1 shl ((L shl 1) + L))
   return 0
 
 proc hts_bin_bot*(bin: cint; n_lvls: cint): cint {.inline, cdecl.} =
   var
-    l: cint
-    b: cint
-  l = 0
-  b = bin
+    L: cint = 0
+    b: cint = bin
   while b != 0:
     ##  compute the level of bin
-    inc(l)
+    inc(L)
     b = hts_bin_parent(b)
-  return ((bin - hts_bin_first(l)) shl (n_lvls - l) * 3).cint
+  return ((bin - hts_bin_first(L)) shl (n_lvls - L) * 3).cint
 
 ## *************
 ##  Endianness *

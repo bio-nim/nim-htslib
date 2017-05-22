@@ -1,7 +1,8 @@
+# vim: sw=2 ts=2 sts=2 tw=80 et:
 ##  The MIT License
-## 
+##
 ##    Copyright (C) 2011 by Attractive Chaos <attractor@live.co.uk>
-## 
+##
 ##    Permission is hereby granted, free of charge, to any person obtaining
 ##    a copy of this software and associated documentation files (the
 ##    "Software"), to deal in the Software without restriction, including
@@ -9,10 +10,10 @@
 ##    distribute, sublicense, and/or sell copies of the Software, and to
 ##    permit persons to whom the Software is furnished to do so, subject to
 ##    the following conditions:
-## 
+##
 ##    The above copyright notice and this permission notice shall be
 ##    included in all copies or substantial portions of the Software.
-## 
+##
 ##    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 ##    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 ##    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -21,7 +22,7 @@
 ##    ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 ##    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ##    SOFTWARE.
-## 
+##
 
 ##  kstring_t is a simple non-opaque type whose fields are likely to be
 ##  used directly by user code (but see also ks_str() and ks_len() below).
@@ -39,17 +40,17 @@ const
   KS_SEP_MAX*   = 2
 
 type
-  kstring_t* {.importc: "kstring_t", header: "kstring.h".} = object
+  kstring_t* {.importc: "kstring_t", header: "htslib/kstring.h".} = object
     L* {.importc: "l".}: csize
     m* {.importc: "m".}: csize
     s* {.importc: "s".}: cstring
 
-  ks_tokaux_t* {.importc: "ks_tokaux_t", header: "kstring.h".} = object
+  ks_tokaux_t* {.importc: "ks_tokaux_t", header: "htslib/kstring.h".} = object
     tab* {.importc: "tab".}: array[4, uint64]
     sep* {.importc: "sep".}: cint
     finished* {.importc: "finished".}: cint
     p* {.importc: "p".}: cstring ##  end of the current token
-  
+
 proc kroundup32*[T](x: var T) =
   dec(x)
   (x) = (x) or (x) shr 1
@@ -60,24 +61,24 @@ proc kroundup32*[T](x: var T) =
   inc(x)
 
 #proc kvsprintf*(s: ptr kstring_t; fmt: cstring; ap: va_list): cint {.cdecl,
-#    importc: "kvsprintf", header: "kstring.h".}
+#    importc: "kvsprintf", header: "htslib/kstring.h".}
 proc ksprintf*(s: ptr kstring_t; fmt: cstring): cint {.varargs, cdecl,
-    importc: "ksprintf", header: "kstring.h".}
+    importc: "ksprintf", header: "htslib/kstring.h".}
 proc ksplit_core*(s: cstring; delimiter: cint; max: ptr cint; offsets: ptr ptr cint): cint {.
-    cdecl, importc: "ksplit_core", header: "kstring.h".}
+    cdecl, importc: "ksplit_core", header: "htslib/kstring.h".}
 proc kstrstr*(str: cstring; pat: cstring; prep: ptr ptr cint): cstring {.cdecl,
-    importc: "kstrstr", header: "kstring.h".}
+    importc: "kstrstr", header: "htslib/kstring.h".}
 proc kstrnstr*(str: cstring; pat: cstring; n: cint; prep: ptr ptr cint): cstring {.cdecl,
-    importc: "kstrnstr", header: "kstring.h".}
+    importc: "kstrnstr", header: "htslib/kstring.h".}
 proc kmemmem*(str: pointer; n: cint; pat: pointer; m: cint; prep: ptr ptr cint): pointer {.
-    cdecl, importc: "kmemmem", header: "kstring.h".}
+    cdecl, importc: "kmemmem", header: "htslib/kstring.h".}
 ##  kstrtok() is similar to strtok_r() except that str is not
 ##  modified and both str and sep can be NULL. For efficiency, it is
 ##  actually recommended to set both to NULL in the subsequent calls
 ##  if sep is not changed.
 
 proc kstrtok*(str: cstring; sep: cstring; aux: ptr ks_tokaux_t): cstring {.cdecl,
-    importc: "kstrtok", header: "kstring.h".}
+    importc: "kstrtok", header: "htslib/kstring.h".}
 proc ks_resize*(s: ptr kstring_t; size: csize): cint {.inline, cdecl.} =
   if s.m < size:
     var tmp: cstring
@@ -254,10 +255,10 @@ proc kputl*(c: clong; s: ptr kstring_t): cint {.inline, cdecl.} =
   s.s[s.L] = '\0'
   return 0
 
-## 
+##
 ##  Returns 's' split by delimiter, with *n being the number of components;
 ##          NULL on failue.
-## 
+##
 
 proc ksplit*(s: ptr kstring_t; delimiter: cint; n: ptr cint): ptr cint {.inline, cdecl.} =
   var
