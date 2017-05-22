@@ -219,8 +219,9 @@ proc aux_fields1*(): cint =
     if (p != nil) and cast[uint32](bam_aux2i(p)).int64 != 4294967295'i64:
       fail("Y8 field is $#, expected 2^32-1" % $bam_aux2i(p))
     # bam_aux_append() got a return-val eventually
-    if bam_aux_append(aln, arr2("N0"), 'i', sizeof((ival)).cint, cast[ptr uint8](addr(ival))) != 0:
-      fail("Failed to append N0:i tag")
+    bam_aux_append(aln, arr2("N0"), 'i', sizeof((ival)).cint, cast[ptr uint8](addr(ival)))
+    ##if bam_aux_append(aln, arr2("N0"), 'i', sizeof((ival)).cint, cast[ptr uint8](addr(ival))) != 0:
+    ##  fail("Failed to append N0:i tag")
     p = bam_aux_get(aln, arr2("N0"))
     if (p != nil) and bam_aux2i(p) != ival:
       fail("N0 field is $#, expected $#" % $bam_aux2i(p), ival)
