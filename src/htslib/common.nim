@@ -1,3 +1,4 @@
+from strutils import startsWith
 import math
 
 proc throw*(msg: string) =
@@ -54,3 +55,16 @@ template usePtr*[T] =
 template asarray*[T](p: pointer): auto =
   type A {.unchecked.} = array[0..0, T]
   cast[ptr A](p)
+
+
+# Note backward-incompatible changes in 1.4.
+# See htslib commits
+# htslib@5d114ebd8e9b80622769b8e575c5a9359cd51273
+# htslib@32984ca18ecb08498625f23b9a3bd2f8af3ab1f2
+const htslib_modversion* {.strdefine.}: string = "0.0.0"
+when htslib_modversion.startsWith("1.3"):
+  const htslib1dot4plus* = false
+elif htslib_modversion.startsWith("0"):
+  const htslib1dot4plus* = false
+else:
+  const htslib1dot4plus* = true

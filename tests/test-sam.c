@@ -69,7 +69,7 @@ uint8_t *check_bam_aux_get(const bam1_t *aln, const char *tag, char type)
     return NULL;
 }
 
-/*
+#ifndef XXX
 // bam_auxB stuff is in a later version of htslib
 static void check_int_B_array(bam1_t *aln, char *tag,
                              uint32_t nvals, int64_t *vals) {
@@ -82,6 +82,7 @@ static void check_int_B_array(bam1_t *aln, char *tag,
                  tag, bam_auxB_len(p), nvals);
 
         for (i = 0; i < nvals; i++) {
+            //fprintf(stderr, "i=%d, B2f=%f\n", i, bam_auxB2f(p, i));
             if (bam_auxB2i(p, i) != vals[i]) {
                 fail("Wrong value from bam_auxB2i for %s field index %u, "
                      "got %"PRId64" expected %"PRId64"\n",
@@ -95,7 +96,7 @@ static void check_int_B_array(bam1_t *aln, char *tag,
         }
     }
 }
-*/
+#endif
 
 #define PI 3.141592653589793
 #define E  2.718281828459045
@@ -171,7 +172,7 @@ static int aux_fields1(void)
             && ! (memcmp(p, "Bc", 2) == 0
                   && memcmp(p + 2, "\x03\x00\x00\x00\xfe\x00\x02", 7) == 0))
             fail("XB field is %c,..., expected c,-2,0,+2", p[1]);
-        /*
+#ifndef XXX
         check_int_B_array(aln, "B0",
                           sizeof(b0vals) / sizeof(b0vals[0]), b0vals);
         check_int_B_array(aln, "B1",
@@ -199,7 +200,7 @@ static int aux_fields1(void)
                 }
             }
         }
-        */
+#endif
         if ((p = check_bam_aux_get(aln, "ZZ", 'I')) && bam_aux2i(p) != 1000000)
             fail("ZZ field is %"PRId64", expected 1000000", bam_aux2i(p));
 

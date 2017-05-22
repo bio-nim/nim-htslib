@@ -25,6 +25,7 @@
 
 import
   hts, kstring
+from common import htslib1dot4plus
 
 ## *********************
 ## ** SAM/BAM header ***
@@ -453,13 +454,70 @@ proc bam_aux2f*(s: ptr uint8): cdouble {.cdecl, importc: "bam_aux2f", header: "h
 proc bam_aux2A*(s: ptr uint8): char {.cdecl, importc: "bam_aux2A", header: "htslib/sam.h".}
 proc bam_aux2Z*(s: ptr uint8): cstring {.cdecl, importc: "bam_aux2Z", header: "htslib/sam.h".}
 
-# bam_aux_append() got a return-val eventually
-proc bam_aux_append*(b: ptr bam1_t; tag: array[2, char]; `type`: char; len: cint;
-                    data: ptr uint8) {.cdecl, importc: "bam_aux_append",
-                                      header: "htslib/sam.h".}
-proc bam_aux_del*(b: ptr bam1_t; s: ptr uint8): cint {.cdecl, importc: "bam_aux_del",
-    header: "htslib/sam.h".}
+## / Get the length of an array-type ('B') tag
+## * @param s Pointer to the tag data, as returned by bam_aux_get().
+##     @return The length of the array, or 0 if the tag is not an array type.
+##     If the tag is not an array type, errno is set to EINVAL.
+##
+proc bam_auxB_len*(s: ptr uint8): uint32 {.cdecl, importc: "bam_auxB_len", header: "htslib/sam.h".}
 
+## / Get an integer value from an array-type tag
+## * @param s   Pointer to the tag data, as returned by bam_aux_get().
+##     @param idx 0-based Index into the array
+##     @return The idx'th value, or 0 on error.
+##     If the array is not an integer type, errno is set to EINVAL.  If idx
+##     is greater than or equal to  the value returned by bam_auxB_len(s),
+##     errno is set to ERANGE.  In both cases, 0 will be returned.
+##
+proc bam_auxB2i*(s: ptr uint8; idx: uint32): int64 {.cdecl, importc: "bam_auxB2i", header: "htslib/sam.h".}
+
+## / Get a floating-point value from an array-type tag
+## * @param s   Pointer to the tag data, as returned by bam_aux_get().
+##     @param idx 0-based Index into the array
+##     @return The idx'th value, or 0.0 on error.
+##     If the array is not a numeric type, errno is set to EINVAL.  This can
+##     only actually happen if the input record has an invalid type field.  If
+##     idx is greater than or equal to  the value returned by bam_auxB_len(s),
+##     errno is set to ERANGE.  In both cases, 0.0 will be returned.
+##
+proc bam_auxB2f*(s: ptr uint8; idx: uint32): cdouble {.cdecl, importc: "bam_auxB2f", header: "htslib/sam.h".}
+
+##     Append tag data to a bam record
+##     @param b    The bam record to append to.
+##     @param tag  Tag identifier
+##     @param type Tag data type
+##     @param len  Length of the data in bytes
+##     @param data The data to append
+##     @return 0 on success; -1 on failure.
+##     If there is not enough space to store the additional tag, errno is set to
+##     ENOMEM.  If the type is invalid, errno may be set to EINVAL.  errno is
+##     also set to EINVAL if the bam record's aux data is corrupt.
+##
+when htslib1dot4plus:
+
+  proc bam_aux_append*(b: ptr bam1_t; tag: array[2, char]; `type`: char; len: cint; data: ptr uint8): cint {.cdecl, importc: "bam_aux_append", header: "htslib/sam.h", discardable.}
+
+else:
+
+  proc bam_aux_append*(b: ptr bam1_t; tag: array[2, char]; `type`: char; len: cint; data: ptr uint8) {.cdecl, importc: "bam_aux_append", header: "htslib/sam.h".}
+
+##     Delete tag data from a bam record
+##     @param b The bam record to update
+##     @param s Pointer to the tag to delete, as returned by bam_aux_get().
+##     @return 0 on success; -1 on failure
+##     If the bam record's aux data is corrupt, errno is set to EINVAL and this
+##     function returns -1;
+##
+proc bam_aux_del*(b: ptr bam1_t; s: ptr uint8): cint {.cdecl, importc: "bam_aux_del", header: "htslib/sam.h".}
+
+##     Update a string-type tag
+##     @param b    The bam record to update
+##     @param tag  Tag identifier
+##     @param len  The length of the new string
+##     @param data The new string
+##     @return 0 on success, -1 on failure
+##
+proc bam_aux_update_str*(b: ptr bam1_t, tag: array[2, char], len: cint, data: ptr char): cint {.cdecl, importc: "bam_aux_update_str", header: "htslib/sam.h", discardable.}
 ## *************************
 ## ** Pileup and Mpileup ***
 ## ************************

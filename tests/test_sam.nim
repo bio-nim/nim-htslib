@@ -29,26 +29,14 @@
 
 #template HTS_DEPRECATED*(message: untyped): void = nil
 
-from strutils import `%`, startsWith
+from strutils import `%`
 from os import nil
 from htslib/hts import nil
 import
  htslib/sam, htslib/faidx, htslib/kstring
 
-from htslib/common import nil
+from htslib/common import htslib1dot4plus
 common.usePtr[uint8]()
-
-# Note backward-incompatible changes in 1.4.
-# See htslib commits
-# htslib@5d114ebd8e9b80622769b8e575c5a9359cd51273
-# htslib@32984ca18ecb08498625f23b9a3bd2f8af3ab1f2
-const htslib_modversion {.strdefine.}: string = "0.0.0"
-when htslib_modversion.startsWith("1.3"):
-  const htslib1dot4plus = false
-elif htslib_modversion.startsWith("0"):
-  const htslib1dot4plus = false
-else:
-  const htslib1dot4plus = true
 
 when htslib1dot4plus:
   const data_prefix = "data:,"
@@ -77,30 +65,32 @@ proc check_bam_aux_get*(aln: ptr bam1_t; tag: cstring; `type`: char): ptr uint8 
     fail("can\'t find $# field\x0A", tag)
   return nil
 
-proc check_int_B_array*(aln: ptr bam1_t; tag: cstring; nvals: uint32;
-                       vals: ptr int64) =
+proc check_int_B_array*(aln: ptr bam1_t; tag: string; vals: seq[int64]) =
+  let nvals = len(vals)
   when htslib1dot4plus:
     # bam_auxB stuff is in a later version of htslib
     var p: ptr uint8
     p = check_bam_aux_get(aln, arr2(tag), 'B')
     if p != nil:
-      var i: uint32
-      if bam_auxB_len(p) != nvals:
+      if bam_auxB_len(p).int != nvals:
         fail("Wrong length reported for $# field, got $#, expected $#\x0A", tag,
             bam_auxB_len(p), nvals)
+      var i: int
       i = 0
-      while i < nvals:
-        if bam_auxB2i(p, i) != vals[i]:
+      while i.int < nvals:
+        #echo("i=$#, B2f=$#, vals[i]=" % [$i, $bam_auxB2f(p, i.uint32)], $vals[i]);
+        if bam_auxB2i(p, i.uint32) != vals[i]:
           fail("Wrong value from bam_auxB2i for $# field index $#, got $#",
-              " expected $#\x0A", tag, i, bam_auxB2i(p, i), vals[i])
-        if bam_auxB2f(p, i) != cast[cdouble](vals[i]):
+              " expected $#\x0A", tag, i, bam_auxB2i(p, i.uint32), $vals[i])
+        if bam_auxB2f(p, i.uint32) != cdouble(vals[i]):
           fail("Wrong value from bam_auxB2f for $# field index $#, got $# expected $#\x0A",
-              tag, i, bam_auxB2f(p, i), cast[cdouble](vals[i]))
+              tag, i, bam_auxB2f(p, i.uint32), vals[i])
         inc(i)
 
 const
   PI* = 3.141592653589793
   E* = 2.718281828459045
+var # so we have addresses
   HELLO* = "Hello, world!"
   NEW_HELLO* = "Yo, dude"
   BEEF* = "DEADBEEF"
@@ -119,25 +109,29 @@ proc memcmp(a: ptr uint8, b: string, num: int): int =
 proc aux_fields1*(): cint =
   var sam = data_prefix & "@SQ\x09SN:one\x09LN:1000\x0A@SQ\x09SN:two\x09LN:500\x0Ar1\x090\x09one\x09500\x0920\x098M\x09*\x090\x090\x09ATGCATGC\x09qqqqqqqq\x09XA:A:k\x09Xi:i:37\x09Xf:f:3.141592653589793\x09Xd:d:2.718281828459045\x09XZ:Z:Hello, world!\x09XH:H:DEADBEEF\x09XB:B:c,-2,0,+2\x09B0:B:i,-2147483648,-1,0,1,2147483647\x09B1:B:I,0,1,2147483648,4294967295\x09B2:B:s,-32768,-1,0,1,32767\x09B3:B:S,0,1,32768,65535\x09B4:B:c,-128,-1,0,1,127\x09B5:B:C,0,1,127,255\x09Bf:B:f,-3.14159,2.71828\x09ZZ:i:1000000\x09Y1:i:-2147483648\x09Y2:i:-2147483647\x09Y3:i:-1\x09Y4:i:0\x09Y5:i:1\x09Y6:i:2147483647\x09Y7:i:2147483648\x09Y8:i:4294967295\x0A"
   ##  Canonical form of the alignment record above, as output by sam_format1()
-  var r1 = "r1\x090\x09one\x09500\x0920\x098M\x09*\x090\x090\x09ATGCATGC\x09qqqqqqqq\x09Xi:i:37\x09Xf:f:3.14159\x09Xd:d:2.71828\x09XZ:Z:Yo, dude\x09XH:H:DEADBEEF\x09XB:B:c,-2,0,2\x09B0:B:i,-2147483648,-1,0,1,2147483647\x09B1:B:I,0,1,2147483648,4294967295\x09B2:B:s,-32768,-1,0,1,32767\x09B3:B:S,0,1,32768,65535\x09B4:B:c,-128,-1,0,1,127\x09B5:B:C,0,1,127,255\x09Bf:B:f,-3.14159,2.71828\x09ZZ:i:1000000\x09Y1:i:-2147483648\x09Y2:i:-2147483647\x09Y3:i:-1\x09Y4:i:0\x09Y5:i:1\x09Y6:i:2147483647\x09Y7:i:2147483648\x09Y8:i:4294967295\x09N0:i:-1234\x09N1:i:1234"
+  let ra = "r1\x090\x09one\x09500\x0920\x098M\x09*\x090\x090\x09ATGCATGC\x09qqqqqqqq\x09Xi:i:37\x09Xf:f:3.14159\x09Xd:d:2.71828\x09XZ:Z:Yo, dude\x09XH:H:DEADBEEF\x09XB:B:c,-2,0,2\x09B0:B:i,-2147483648,-1,0,1,2147483647\x09B1:B:I,0,1,2147483648,4294967295\x09B2:B:s,-32768,-1,0,1,32767\x09B3:B:S,0,1,32768,65535\x09B4:B:c,-128,-1,0,1,127\x09B5:B:C,0,1,127,255\x09Bf:B:f,-3.14159,2.71828\x09ZZ:i:1000000\x09Y1:i:-2147483648\x09Y2:i:-2147483647\x09Y3:i:-1\x09Y4:i:0\x09Y5:i:1\x09Y6:i:2147483647\x09Y7:i:2147483648\x09Y8:i:4294967295\x09N0:i:-1234\x09N1:i:1234"
   # Or without the NEW_HELLO sub
-  var r0 = "r1\x090\x09one\x09500\x0920\x098M\x09*\x090\x090\x09ATGCATGC\x09qqqqqqqq\x09Xi:i:37\x09Xf:f:3.14159\x09Xd:d:2.71828\x09XZ:Z:Hello, world!\x09XH:H:DEADBEEF\x09XB:B:c,-2,0,2\x09B0:B:i,-2147483648,-1,0,1,2147483647\x09B1:B:I,0,1,2147483648,4294967295\x09B2:B:s,-32768,-1,0,1,32767\x09B3:B:S,0,1,32768,65535\x09B4:B:c,-128,-1,0,1,127\x09B5:B:C,0,1,127,255\x09Bf:B:f,-3.14159,2.71828\x09ZZ:i:1000000\x09Y1:i:-2147483648\x09Y2:i:-2147483647\x09Y3:i:-1\x09Y4:i:0\x09Y5:i:1\x09Y6:i:2147483647\x09Y7:i:2147483648\x09Y8:i:4294967295\x09N0:i:-1234\x09N1:i:1234"
+  let rb = "r1\x090\x09one\x09500\x0920\x098M\x09*\x090\x090\x09ATGCATGC\x09qqqqqqqq\x09Xi:i:37\x09Xf:f:3.14159\x09Xd:d:2.71828\x09XZ:Z:Hello, world!\x09XH:H:DEADBEEF\x09XB:B:c,-2,0,2\x09B0:B:i,-2147483648,-1,0,1,2147483647\x09B1:B:I,0,1,2147483648,4294967295\x09B2:B:s,-32768,-1,0,1,32767\x09B3:B:S,0,1,32768,65535\x09B4:B:c,-128,-1,0,1,127\x09B5:B:C,0,1,127,255\x09Bf:B:f,-3.14159,2.71828\x09ZZ:i:1000000\x09Y1:i:-2147483648\x09Y2:i:-2147483647\x09Y3:i:-1\x09Y4:i:0\x09Y5:i:1\x09Y6:i:2147483647\x09Y7:i:2147483648\x09Y8:i:4294967295\x09N0:i:-1234\x09N1:i:1234"
+  when htslib1dot4plus:
+    var r1 = ra
+  else:
+    var r1 = rb
   var `in`: ptr samFile = sam_open(sam, "r")
   var header: ptr bam_hdr_t = sam_hdr_read(`in`)
   var aln: ptr bam1_t = bam_init1()
   var p: ptr uint8
   var ks = kstring_t(L:0, m:0, s:nil)
-  var b0vals: array[5, int64] = [- 2147483648'i64, - 1, 0, 1, 2147483647]
+  var b0vals: seq[int64] = @[- 2147483648'i64, - 1, 0, 1, 2147483647]
   ##  i
-  var b1vals: array[4, int64] = [0'i64, 1, 2147483648, 4294967295]
+  var b1vals: seq[int64] = @[0'i64, 1, 2147483648, 4294967295]
   ##  I
-  var b2vals: array[5, int64] = [- 32768'i64, - 1, 0, 1, 32767]
+  var b2vals: seq[int64] = @[- 32768'i64, - 1, 0, 1, 32767]
   ##  s
-  var b3vals: array[4, int64] = [0'i64, 1, 32768, 65535]
+  var b3vals: seq[int64] = @[0'i64, 1, 32768, 65535]
   ##  S
-  var b4vals: array[5, int64] = [- 128'i64, - 1, 0, 1, 127]
+  var b4vals: seq[int64] = @[- 128'i64, - 1, 0, 1, 127]
   ##  c
-  var b5vals: array[4, int64] = [0'i64, 1, 127, 255]
+  var b5vals: seq[int64] = @[0'i64, 1, 127, 255]
   ##  C
   ##  NB: Floats not doubles below!
   ##  See https://randomascii.wordpress.com/2012/06/26/doubles-are-not-floats-so-dont-compare-them/
@@ -146,7 +140,6 @@ proc aux_fields1*(): cint =
   var uval: uint32 = 1234
   var
     nvals: csize = 2
-    #i: csize
   if sam_read1(`in`, header, aln) >= 0:
     p = check_bam_aux_get(aln, "XA", 'A')
     if (p != nil) and bam_aux2A(p) != 'k':
@@ -165,36 +158,37 @@ proc aux_fields1*(): cint =
     p = check_bam_aux_get(aln, "XZ", 'Z')
     if (p != nil) and strcmp(bam_aux2Z(p), HELLO) != 0:
       fail("XZ field is \"%s\", expected \"%s\"", bam_aux2Z(p), HELLO)
-    ###bam_aux_update_str(aln, "XZ", strlen(NEW_HELLO) + 1, NEW_HELLO)
-    ###p = check_bam_aux_get(aln, "XZ", 'Z')
-    ###if (p != nil) and
-    ###    strcmp(bam_aux2Z(p), NEW_HELLO) != 0:
-    ###  fail("XZ field is \"%s\", expected \"%s\"", bam_aux2Z(p), NEW_HELLO)
+    when htslib1dot4plus:
+      bam_aux_update_str(aln, arr2("XZ"), cint(len(NEW_HELLO) + 1), addr NEW_HELLO[0])
+      p = check_bam_aux_get(aln, arr2("XZ"), 'Z')
+      if (p != nil) and
+          strcmp(bam_aux2Z(p), NEW_HELLO) != 0:
+        fail("XZ field is \"$#\", expected \"$#\"", bam_aux2Z(p), NEW_HELLO)
     p = check_bam_aux_get(aln, "XH", 'H')
     if (p != nil) and strcmp(bam_aux2Z(p), BEEF) != 0:
-      fail("XH field is \"%s\", expected \"%s\"", bam_aux2Z(p), BEEF)
+      fail("XH field is \"$#\", expected \"$#\"", bam_aux2Z(p), BEEF)
     p = check_bam_aux_get(aln, "XB", 'B')
     if (p != nil) and
         not (memcmp(p, "Bc", 2) == 0 and
         memcmp(p + 2, "\x03\0\0\0\xFE\0\x02", 7) == 0):
       fail("XB field is $#,..., expected c,-2,0,+2", p[1])
     when htslib1dot4plus:
-      check_int_B_array(aln, "B0", sizeof((b0vals) div sizeof((b0vals[0]))), b0vals)
-      check_int_B_array(aln, "B1", sizeof((b1vals) div sizeof((b1vals[0]))), b1vals)
-      check_int_B_array(aln, "B2", sizeof((b2vals) div sizeof((b2vals[0]))), b2vals)
-      check_int_B_array(aln, "B3", sizeof((b3vals) div sizeof((b3vals[0]))), b3vals)
-      check_int_B_array(aln, "B4", sizeof((b4vals) div sizeof((b4vals[0]))), b4vals)
-      check_int_B_array(aln, "B5", sizeof((b5vals) div sizeof((b5vals[0]))), b5vals)
+      check_int_B_array(aln, "B0", b0vals)
+      check_int_B_array(aln, "B1", b1vals)
+      check_int_B_array(aln, "B2", b2vals)
+      check_int_B_array(aln, "B3", b3vals)
+      check_int_B_array(aln, "B4", b4vals)
+      check_int_B_array(aln, "B5", b5vals)
       p = check_bam_aux_get(aln, "Bf", 'B')
       if p != nil:
-        if bam_auxB_len(p) != nvals:
+        if bam_auxB_len(p) != nvals.uint32:
           fail("Wrong length reported for Bf field, got $#, expected $#\x0A",
               bam_auxB_len(p), nvals)
-        i = 0
+        var i: int = 0
         while i < nvals:
-          if bam_auxB2f(p, i) != bfvals[i]:
+          if bam_auxB2f(p, i.uint32) != bfvals[i]:
             fail("Wrong value from bam_auxB2f for Bf field index $#, got $# expected $#\x0A",
-                i, bam_auxB2f(p, i), bfvals[i])
+                i, bam_auxB2f(p, i.uint32), bfvals[i])
           inc(i)
     p = check_bam_aux_get(aln, "ZZ", 'I')
     if (p != nil) and bam_aux2i(p) != 1000000:
@@ -224,10 +218,8 @@ proc aux_fields1*(): cint =
     if (p != nil) and cast[uint32](bam_aux2i(p)).int64 != 4294967295'i64:
       fail("Y8 field is $#, expected 2^32-1" % $bam_aux2i(p))
     # bam_aux_append() got a return-val eventually
-    bam_aux_append(aln, arr2("N0"), 'i', sizeof((ival)).cint, cast[ptr uint8](addr(ival)))
-    ##if bam_aux_append(aln, arr2("N0"), 'i', sizeof((ival)).cint, cast[ptr uint8](addr(ival))) !=
-    ##    0:
-    ##  fail("Failed to append N0:i tag")
+    if bam_aux_append(aln, arr2("N0"), 'i', sizeof((ival)).cint, cast[ptr uint8](addr(ival))) != 0:
+      fail("Failed to append N0:i tag")
     p = bam_aux_get(aln, arr2("N0"))
     if (p != nil) and bam_aux2i(p) != ival:
       fail("N0 field is $#, expected $#" % $bam_aux2i(p), ival)
@@ -239,7 +231,7 @@ proc aux_fields1*(): cint =
     if (p != nil) and bam_aux2i(p).uint32 != uval:
       fail("N1 field is $#, expected $#" % [$bam_aux2i(p), $uval])
     if sam_format1(header, aln, addr(ks)) < 0: fail("can\'t format record")
-    if strcmp(ks.s, r0) != 0: fail("record formatted incorrectly:\L$#\L$#\n" % [$ks.s, r0]) # or r1 if updated
+    if strcmp(ks.s, r1) != 0: fail("record formatted incorrectly:\L$#\L$#\n" % [$ks.s, r1])
     #free(ks.s)
   else:
     fail("can\'t read record")
