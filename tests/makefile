@@ -12,11 +12,11 @@ LDLIBS?=$(shell pkg-config --libs htslib)
 default: run-main
 
 # test both Nim and C
-test: | ../repos/htslib
+test: | ../.git/modules/repos/htslib
 	${MAKE} nvcftest nhfiletest nsamtest
-test-c: | ../repos/htslib
+test-c: | ../.git/modules/repos/htslib
 	${MAKE} vcftest hfiletest samtest
-../repos/htslib:
+../.git/modules/repos/htslib:
 	cd ../repos; git submodule update --init
 nvcftest: test_vcf_api.exe
 	cd ${HTSLIB_ROOT}; ${THISDIR}/test_vcf_api.exe
