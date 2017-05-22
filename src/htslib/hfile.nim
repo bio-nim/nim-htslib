@@ -1,3 +1,4 @@
+# vim: sw=2 ts=2 sts=2 tw=80 et:
 ##   hfile.h -- buffered low-level input/output streams.
 ##
 ##     Copyright (C) 2013-2014 Genome Research Ltd.

@@ -1,3 +1,4 @@
+# vim: sw=2 ts=2 sts=2 tw=80 et:
 ##   test/sam.c -- SAM/BAM/CRAM API test cases.
 ##
 ##     Copyright (C) 2014-2017 Genome Research Ltd.

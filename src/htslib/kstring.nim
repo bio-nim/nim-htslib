@@ -1,3 +1,4 @@
+# vim: sw=2 ts=2 sts=2 tw=80 et:
 ##  The MIT License
 ##
 ##    Copyright (C) 2011 by Attractive Chaos <attractor@live.co.uk>

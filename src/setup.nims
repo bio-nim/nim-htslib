@@ -1,4 +1,4 @@
-# vim: sw=2 ts=2 sts=2 tw=80 et:
+# vim: sw=4 ts=2 sts=4 tw=80 et:
 from strutils import `%`
 
 proc capture(command, input="", cache:string =""): string =
