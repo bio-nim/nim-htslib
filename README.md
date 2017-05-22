@@ -6,7 +6,20 @@ Nim wrapper for htslib
 For examples see `tests/*.nim`
 (TODO: Provide real examples.)
 
-# Integration
+# Easy integration
+If you have nim and htslib installed in your standard system directories,
+things are easy. We make some assumptions (htslib >= 1.4.0),
+and everything should Just Work.
+
+    nimble test
+    nimble install
+
+Enjoy!
+
+# Harder integration
+We take advantage of **pkg-config** or some environment variables,
+so most systems are supported, sometimes with effort.
+
 1. Install dependencies.
 1. Run tests.
 1. Build your own executable.
@@ -44,6 +57,8 @@ $ pkg-config --libs htslib
 -L/mnt/software/h/htslib/1.3.1/lib -lhts
 $ pkg-config --libs --static htslib
 -L/mnt/software/h/htslib/1.3.1/lib -lhts -lm -lpthread -lz
+$ pkg-config --modversion htslib
+1.3.1
 ```
 
 (For now, we always build static binaries. Someday, we may provide a setting to use dynamic libs,
@@ -61,11 +76,12 @@ Within PacBio, that will set-up **pkg-config**, and all should work.
 ### Other ways
 You could try building htslib from the pbbam repository, or some other means.
 
-If you do not env up with **pkg-config** files, then you can accomplish still
-set flags via `CFLAGS` and `LDFLAGS` in your shell-environment. E.g.
+If you do not build **pkg-config** `.pc` files, then you can set flags
+more directly via `CFLAGS` and `LDFLAGS` in your shell-environment. E.g.
 
     export CFLAGS="-I/my/include"
     export LDFLAGS="-L/my/lib -lhtslib -lz"
+    export HTSLIB_VERSION="1.3.1"
 
 Note that you need to specify the `-l` flags according to which libraries
 were available and used when you built **htslib**. (With dynamic linking,
@@ -87,3 +103,11 @@ Then,
     nim c foo
 
 Our `setup.nims` will pass along the cflags and ldflags for you.
+
+## Version
+This wrapper will work will all known versions of htslib.
+Of course, it is only a subset of the API.
+In order to wrap different versions differently, you must
+provide the version at build-time. This is trivial with
+**pkg-config**, but otherwise you must set `HTSLIB_VERSION`
+in your shell environment.
