@@ -13,7 +13,9 @@ default: run-main
 
 # test both Nim and C
 test: | ../repos/htslib
-	${MAKE} vcftest nvcftest hfiletest nhfiletest samtest nsamtest
+	${MAKE} nvcftest nhfiletest nsamtest
+test-c: | ../repos/htslib
+	${MAKE} vcftest hfiletest samtest
 ../repos/htslib:
 	cd ../repos; git submodule update --init
 nvcftest: test_vcf_api.exe
