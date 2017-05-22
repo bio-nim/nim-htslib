@@ -320,7 +320,7 @@ proc check_enum1*() =
 
 proc main*(args: seq[string]): cint =
   status = QuitSuccess
-  discard aux_fields1()
+  #discard aux_fields1()
   iterators1()
   samrecord_layout()
   check_enum1()
