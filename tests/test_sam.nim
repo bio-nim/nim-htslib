@@ -218,15 +218,14 @@ proc aux_fields1*(): cint =
     p = bam_aux_get(aln, arr2("Y8"))
     if (p != nil) and cast[uint32](bam_aux2i(p)).int64 != 4294967295'i64:
       fail("Y8 field is $#, expected 2^32-1" % $bam_aux2i(p))
-    # bam_aux_append() got a return-val eventually
-    if bam_aux_append(aln, arr2("N0"), 'i', sizeof((ival)).cint, cast[ptr uint8](addr(ival))) != 0:
-      fail("Failed to append N0:i tag")
+    bam_aux_append(aln, arr2("N0"), 'i', sizeof((ival)).cint, cast[ptr uint8](addr(ival)))
+    ##if bam_aux_append(aln, arr2("N0"), 'i', sizeof((ival)).cint, cast[ptr uint8](addr(ival))) != 0:
+    ##  fail("Failed to append N0:i tag")
     p = bam_aux_get(aln, arr2("N0"))
     if (p != nil) and bam_aux2i(p) != ival:
       fail("N0 field is $#, expected $#" % $bam_aux2i(p), ival)
     bam_aux_append(aln, arr2("N1"), 'I', sizeof((uval)).cint, cast[ptr uint8](addr(uval)))
-    ##if bam_aux_append(aln, arr2("N1"), 'I', sizeof((uval)).cint, cast[ptr uint8](addr(uval))) !=
-    ##    0:
+    ##if bam_aux_append(aln, arr2("N1"), 'I', sizeof((uval)).cint, cast[ptr uint8](addr(uval))) != 0:
     ##  fail("failed to append N1:I tag")
     p = bam_aux_get(aln, arr2("N1"))
     if (p != nil) and bam_aux2i(p).uint32 != uval:

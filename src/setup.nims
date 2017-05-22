@@ -26,9 +26,9 @@ except:
 #echo modversion
 #echo passC
 #echo passL
-switch("passC", passC)
-switch("passL", passL)
-switch("define", "htslib_modversion="&modversion)
+if "" != passC: switch("passC", passC)
+if "" != passL: switch("passL", passL)
+if "" != modversion: switch("define", "htslib_modversion="&modversion)
 
 hint("XDeclaredButNotUsed", false)
 warning("SmallLshouldNotBeUsed", false)
