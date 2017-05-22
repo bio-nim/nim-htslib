@@ -30,10 +30,13 @@
 #template HTS_DEPRECATED*(message: untyped): void = nil
 
 from strutils import `%`
-from hts import nil
 from os import nil
+from htslib/hts import nil
 import
-  sam, faidx, kstring
+ htslib/sam, htslib/faidx, htslib/kstring
+
+from htslib/common import nil
+common.usePtr[uint8]()
 
 var status*: cint
 
@@ -89,9 +92,6 @@ proc strcmp(a: cstring, b:string): int =
   ## Only return 0 and 42
   if $a == b: return 0
   else: return 42
-
-from common import nil
-common.usePtr[uint8]()
 
 proc memcmp(a: ptr uint8, b: string, num: int): int =
   ## Only return 0 and 42
@@ -207,18 +207,21 @@ proc aux_fields1*(): cint =
     p = bam_aux_get(aln, arr2("Y8"))
     if (p != nil) and cast[uint32](bam_aux2i(p)).int64 != 4294967295'i64:
       fail("Y8 field is $#, expected 2^32-1" % $bam_aux2i(p))
-    if bam_aux_append(aln, arr2("N0"), 'i', sizeof((ival)).cint, cast[ptr uint8](addr(ival))) !=
-        0:
-      fail("Failed to append N0:i tag")
+    # bam_aux_append() got a return-val eventually
+    bam_aux_append(aln, arr2("N0"), 'i', sizeof((ival)).cint, cast[ptr uint8](addr(ival)))
+    ##if bam_aux_append(aln, arr2("N0"), 'i', sizeof((ival)).cint, cast[ptr uint8](addr(ival))) !=
+    ##    0:
+    ##  fail("Failed to append N0:i tag")
     p = bam_aux_get(aln, arr2("N0"))
     if (p != nil) and bam_aux2i(p) != ival:
       fail("N0 field is $#, expected %d" % $bam_aux2i(p), ival)
-    if bam_aux_append(aln, arr2("N1"), 'I', sizeof((uval)).cint, cast[ptr uint8](addr(uval))) !=
-        0:
-      fail("failed to append N1:I tag")
+    bam_aux_append(aln, arr2("N1"), 'I', sizeof((uval)).cint, cast[ptr uint8](addr(uval)))
+    ##if bam_aux_append(aln, arr2("N1"), 'I', sizeof((uval)).cint, cast[ptr uint8](addr(uval))) !=
+    ##    0:
+    ##  fail("failed to append N1:I tag")
     p = bam_aux_get(aln, arr2("N1"))
     if (p != nil) and bam_aux2i(p).uint32 != uval:
-      fail("N1 field is $#, expected %u" % $bam_aux2i(p), uval)
+      fail("N1 field is $#, expected $#" % [$bam_aux2i(p), $uval])
     if sam_format1(header, aln, addr(ks)) < 0: fail("can\'t format record")
     if strcmp(ks.s, r0) != 0: fail("record formatted incorrectly:\L$#\L$#\n" % [$ks.s, r0]) # or r1 if updated
     #free(ks.s)

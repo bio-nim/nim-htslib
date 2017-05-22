@@ -201,7 +201,7 @@ int main(void)
             fail("chars: hgetc (%d = 0x%x) returned %d = 0x%x", i, i, c, c);
     if ((c = hgetc(fin)) != EOF) fail("chars: hgetc (EOF) returned %d", c);
     if (hclose(fin) != 0) fail("hclose(test/hfile_chars.tmp) for reading");
-
+    /*
     fin = hopen("data:,hello, world!%0A", "r");
     if (fin == NULL) fail("hopen(\"data:...\")");
     n = hread(fin, buffer, 300);
@@ -209,12 +209,12 @@ int main(void)
     buffer[n] = '\0';
     if (strcmp(buffer, "hello, world!\x0A") != 0) fail("hread result");
     if (hclose(fin) != 0) fail("hclose(\"data:...\")");
-
+    */
     fin = hopen("test/xx#blank.sam", "r");
     if (fin == NULL) fail("hopen(\"test/xx#blank.sam\") for reading");
     if (hread(fin, buffer, 100) != 0) fail("test/xx#blank.sam is non-empty");
     if (hclose(fin) != 0) fail("hclose(\"test/xx#blank.sam\") for reading");
-
+    /*
     fin = hopen("data:,", "r");
     if (fin == NULL) fail("hopen(\"data:\") for reading");
     if (hread(fin, buffer, 100) != 0) fail("empty data: URL is non-empty");
@@ -237,6 +237,6 @@ int main(void)
 "of knowledge, exceeds the short vehemence of any carnal pleasure.") != 0)
         fail("hread result for base64");
     if (hclose(fin) != 0) fail("hclose(\"data:;base64,...\")");
-
+    */
     return EXIT_SUCCESS;
 }

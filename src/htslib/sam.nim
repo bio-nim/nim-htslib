@@ -451,11 +451,14 @@ proc bam_aux2i*(s: ptr uint8): int32 {.cdecl, importc: "bam_aux2i", header: "hts
 proc bam_aux2f*(s: ptr uint8): cdouble {.cdecl, importc: "bam_aux2f", header: "htslib/sam.h".}
 proc bam_aux2A*(s: ptr uint8): char {.cdecl, importc: "bam_aux2A", header: "htslib/sam.h".}
 proc bam_aux2Z*(s: ptr uint8): cstring {.cdecl, importc: "bam_aux2Z", header: "htslib/sam.h".}
+
+# bam_aux_append() got a return-val eventually
 proc bam_aux_append*(b: ptr bam1_t; tag: array[2, char]; `type`: char; len: cint;
-                    data: ptr uint8): int {.cdecl, importc: "bam_aux_append",
+                    data: ptr uint8) {.cdecl, importc: "bam_aux_append",
                                       header: "htslib/sam.h".}
 proc bam_aux_del*(b: ptr bam1_t; s: ptr uint8): cint {.cdecl, importc: "bam_aux_del",
     header: "htslib/sam.h".}
+
 ## *************************
 ## ** Pileup and Mpileup ***
 ## ************************
