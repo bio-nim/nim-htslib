@@ -1,4 +1,5 @@
 # vim: sw=2 ts=2 sts=2 tw=80 et:
+{.passL: "-lhts".}
 from strutils import startsWith
 import math
 
