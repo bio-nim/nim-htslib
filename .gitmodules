@@ -1,6 +1,3 @@
-[submodule "pbbam"]
-	path = pbbam
-	url = https://github.com/PacificBiosciences/pbbam
 [submodule "repos/htslib"]
 	path = repos/htslib
 	url = git://github.com/samtools/htslib
