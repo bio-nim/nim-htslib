@@ -4,6 +4,7 @@ THISDIR=$(shell pwd)
 NIMFLAGS?=--listCmd
 #NIMFLAGS+=--d:release
 NIMFLAGS+=--d:debug --debugger:native
+NIMFLAGS+=--verbosity:2
 HTSLIB_ROOT?=../repos/htslib
 CFLAGS?=$(shell pkg-config --cflags htslib)
 LDLIBS?=$(shell pkg-config --libs htslib)

@@ -13,9 +13,12 @@ let passC = capture("pkg-config --cflags htslib", "", sha1)
 #echo passC
 let passL = capture("pkg-config --libs --static htslib", "", sha1)
 #echo passL
+let modversion = capture("pkg-config --modversion htslib", "", sha1)
+#echo modversion
 
 switch("passC", passC)
 switch("passL", passL)
+switch("define", "htslib_modversion="&modversion)
 
 hint("XDeclaredButNotUsed", false)
 warning("SmallLshouldNotBeUsed", false)

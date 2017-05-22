@@ -220,7 +220,8 @@ type
     l_data* {.importc: "l_data".}: cint
     m_data* {.importc: "m_data".}: cint
     data* {.importc: "data".}: ptr uint8
-    id* {.importc: "id".}: uint64 # unless BAM_NO_ID
+    #when not defined(BAM_NO_ID):
+    id* {.importc: "id".}: uint64
 
 
 ## ! @function
