@@ -1,4 +1,5 @@
 # vim: sw=2 ts=2 sts=2 tw=80 et:
+{.passL: "-lhts".}
 ##   hts.h -- format-neutral I/O, indexing, and iterator API functions.
 ##
 ##     Copyright (C) 2012-2014 Genome Research Ltd.

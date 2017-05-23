@@ -1,4 +1,6 @@
 # vim: sw=2 ts=2 sts=2 tw=80 et:
+# UNTESTED: This module might not work yet. ~cd
+{.passL: "-lhts".}
 ##  The MIT License
 ##
 ##    Copyright (c) 2008 Broad Institute / Massachusetts Institute of Technology

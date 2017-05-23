@@ -1,4 +1,5 @@
 # vim: sw=2 ts=2 sts=2 tw=80 et:
+{.passL: "-lhts".}
 ##   vcf.h -- VCF/BCF API functions.
 ##
 ##     Copyright (C) 2012, 2013 Broad Institute.

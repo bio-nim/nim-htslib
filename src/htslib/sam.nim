@@ -1,4 +1,5 @@
 # vim: sw=2 ts=2 sts=2 tw=80 et:
+{.passL: "-lhts".}
 ##   sam.h -- SAM and BAM file I/O and manipulation.
 ##
 ##     Copyright (C) 2008, 2009, 2013-2014 Genome Research Ltd.
