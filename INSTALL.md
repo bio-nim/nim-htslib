@@ -79,7 +79,7 @@ more directly via `CFLAGS` and `LDFLAGS` in your shell-environment. E.g.
 
     export CFLAGS="-I/my/include"
     export LDFLAGS="-L/my/lib -lhtslib -lz"
-    export HTSLIB_VERSION="1.3.1"
+    export HTSLIB_VERSION="1.6"
 
 Note that you need to specify the `-l` flags according to which libraries
 were available and used when you built **htslib**. (With dynamic linking,
@@ -107,5 +107,5 @@ This wrapper will work will all known versions of htslib.
 Of course, it is only a subset of the API.
 In order to wrap different versions differently, you must
 provide the version at build-time. This is trivial with
-**pkg-config**, but otherwise you must set `HTSLIB_VERSION`
-i
+**pkg-config**, but otherwise you must set `HTSLIB_VERSION`.
+(That is for cmake, within pbbam.)

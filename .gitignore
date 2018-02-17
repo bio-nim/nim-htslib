@@ -4,3 +4,5 @@ nimcache/
 *.dSYM
 rmme.bcf*
 /LOCAL/
+/htslib-1.6/
+/*.bz2
