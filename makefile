@@ -6,8 +6,8 @@ test:
 submodule:
 	git submodule update --init
 build-htslib:
-	mkdir -p pbbam/third-party/htslib/build
-	(cd pbbam/third-party/htslib/build; cmake -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_INSTALL_PREFIX=$(shell pwd)/DESTDIR ..; make VERBOSE=1)
+	mkdir -p repos/pbbam/third-party/htslib/build
+	(cd repos/pbbam/third-party/htslib/build; cmake -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_INSTALL_PREFIX=$(shell pwd)/DESTDIR ..; make VERBOSE=1)
 # We are gradually wrapping the headers we actually use.
 # Someday we might actually convert the underlying C code too.
 cp:

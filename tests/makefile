@@ -17,7 +17,7 @@ test: | ../.git/modules/repos/htslib
 test-c: | ../.git/modules/repos/htslib
 	${MAKE} vcftest hfiletest samtest
 ../.git/modules/repos/htslib:
-	cd ../repos; git submodule update --init
+	-cd ../repos; git submodule update --init
 nvcftest: test_vcf_api.exe
 	cd ${HTSLIB_ROOT}; ${THISDIR}/test_vcf_api.exe
 vcftest: test-vcf-api.exe
