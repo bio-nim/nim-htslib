@@ -1,0 +1,8 @@
+#ifdef C2NIM
+#def HTS_RESULT_USED
+#def HTS_DEPRECATED(arg)
+#def HTS_DEPRECATED_ENUM(arg)
+#define HTS_FILE_OPTS_INIT
+#mangle memcpy copyMem
+#mangle __faidx_t struct_faidx_t
+#endif

@@ -34,44 +34,34 @@
 ##  the object disappears (see ks_release() below) or the kstring_t should be
 ##  destroyed with  free(str.s);
 
-const
-  KS_SEP_SPACE* = 0 # isspace(): \t, \n, \v, \f, \r
-  KS_SEP_TAB*   = 1 # isspace() && !' '
-  KS_SEP_LINE*  = 2 # line separator: "\n" (Unix) or "\r\n" (Windows)
-  KS_SEP_MAX*   = 2
-
 type
-  kstring_t* {.importc: "kstring_t", header: "htslib/kstring.h".} = object
-    L* {.importc: "l".}: csize
+  kstring_t* {.importc: "kstring_t", header: "htslib/kstring.h", bycopy.} = object
+    l* {.importc: "l".}: csize
     m* {.importc: "m".}: csize
     s* {.importc: "s".}: cstring
 
-  ks_tokaux_t* {.importc: "ks_tokaux_t", header: "htslib/kstring.h".} = object
-    tab* {.importc: "tab".}: array[4, uint64]
+  ks_tokaux_t* {.importc: "ks_tokaux_t", header: "htslib/kstring.h", bycopy.} = object
+    tab* {.importc: "tab".}: array[4, uint64_t]
     sep* {.importc: "sep".}: cint
     finished* {.importc: "finished".}: cint
     p* {.importc: "p".}: cstring ##  end of the current token
 
-proc kroundup32*[T](x: var T) =
-  dec(x)
-  (x) = (x) or (x) shr 1
-  (x) = (x) or (x) shr 2
-  (x) = (x) or (x) shr 4
-  (x) = (x) or (x) shr 8
-  (x) = (x) or (x) shr 16
-  inc(x)
 
-#proc kvsprintf*(s: ptr kstring_t; fmt: cstring; ap: va_list): cint {.cdecl,
-#    importc: "kvsprintf", header: "htslib/kstring.h".}
+proc kvsprintf*(s: ptr kstring_t; fmt: cstring; ap: va_list): cint {.cdecl,
+    importc: "kvsprintf", header: "htslib/kstring.h".}
 proc ksprintf*(s: ptr kstring_t; fmt: cstring): cint {.varargs, cdecl,
     importc: "ksprintf", header: "htslib/kstring.h".}
-proc ksplit_core*(s: cstring; delimiter: cint; max: ptr cint; offsets: ptr ptr cint): cint {.
+proc kputd*(d: cdouble; s: ptr kstring_t): cint {.cdecl, importc: "kputd",
+    header: "htslib/kstring.h".}
+##  custom %g only handler
+
+proc ksplit_core*(s: cstring; delimiter: cint; _max: ptr cint; _offsets: ptr ptr cint): cint {.
     cdecl, importc: "ksplit_core", header: "htslib/kstring.h".}
-proc kstrstr*(str: cstring; pat: cstring; prep: ptr ptr cint): cstring {.cdecl,
+proc kstrstr*(str: cstring; pat: cstring; _prep: ptr ptr cint): cstring {.cdecl,
     importc: "kstrstr", header: "htslib/kstring.h".}
-proc kstrnstr*(str: cstring; pat: cstring; n: cint; prep: ptr ptr cint): cstring {.cdecl,
+proc kstrnstr*(str: cstring; pat: cstring; n: cint; _prep: ptr ptr cint): cstring {.cdecl,
     importc: "kstrnstr", header: "htslib/kstring.h".}
-proc kmemmem*(str: pointer; n: cint; pat: pointer; m: cint; prep: ptr ptr cint): pointer {.
+proc kmemmem*(_str: pointer; n: cint; _pat: pointer; m: cint; _prep: ptr ptr cint): pointer {.
     cdecl, importc: "kmemmem", header: "htslib/kstring.h".}
 ##  kstrtok() is similar to strtok_r() except that str is not
 ##  modified and both str and sep can be NULL. For efficiency, it is
@@ -80,21 +70,32 @@ proc kmemmem*(str: pointer; n: cint; pat: pointer; m: cint; prep: ptr ptr cint):
 
 proc kstrtok*(str: cstring; sep: cstring; aux: ptr ks_tokaux_t): cstring {.cdecl,
     importc: "kstrtok", header: "htslib/kstring.h".}
+##  kgetline() uses the supplied fgets()-like function to read a "\n"-
+##  or "\r\n"-terminated line from fp.  The line read is appended to the
+##  kstring without its terminator and 0 is returned; EOF is returned at
+##  EOF or on error (determined by querying fp, as per fgets()).
+
+type
+  kgets_func* = proc (a2: cstring; a3: cint; a4: pointer): cstring {.cdecl.}
+
+proc kgetline*(s: ptr kstring_t; fgets: ptr kgets_func; fp: pointer): cint {.cdecl,
+    importc: "kgetline", header: "htslib/kstring.h".}
 proc ks_resize*(s: ptr kstring_t; size: csize): cint {.inline, cdecl.} =
   if s.m < size:
     var tmp: cstring
+    kroundup_size_t(size)
+    tmp = cast[cstring](realloc(s.s, size))
+    if not tmp: return -1
+    s.s = tmp
     s.m = size
-    kroundup32(s.m)
-    tmp = cast[cstring](realloc(s.s, s.m))
-    if (tmp != nil): s.s = tmp
-    else: return - 1
+
   return 0
 
 proc ks_str*(s: ptr kstring_t): cstring {.inline, cdecl.} =
   return s.s
 
 proc ks_len*(s: ptr kstring_t): csize {.inline, cdecl.} =
-  return s.L
+  return s.l
 
 ##  Give ownership of the underlying buffer away to something else (making
 ##  that something else responsible for freeing it), leaving the kstring_t
@@ -102,66 +103,36 @@ proc ks_len*(s: ptr kstring_t): csize {.inline, cdecl.} =
 ##  needing  free(str.s)  to prevent a memory leak.
 
 proc ks_release*(s: ptr kstring_t): cstring {.inline, cdecl.} =
-  var ss: cstring = s.s
-  s.L = 0
-  s.m = 0
+  var ss: cstring
+  s.l = s.m = 0
   s.s = nil
   return ss
 
 proc kputsn*(p: cstring; l: cint; s: ptr kstring_t): cint {.inline, cdecl.} =
-  if s.L + l + 1 >= s.m:
-    var tmp: cstring
-    s.m = s.L + l + 2
-    kroundup32(s.m)
-    tmp = cast[cstring](realloc(s.s, s.m))
-    if (tmp != nil): s.s = tmp
-    else: return -1 # EOF
-  copyMem(cast[pointer](cast[ByteAddress](s.s) + s.L), cast[pointer](p), l)
-  inc(s.L, l)
-  s.s[s.L] = '\0'
+  if ks_resize(s, s.l + l + 2) < 0: return EOF
+  copyMem(s.s + s.l, p, l)
+  inc(s.l, l)
+  s.s[s.l] = 0
   return l
 
 proc kputs*(p: cstring; s: ptr kstring_t): cint {.inline, cdecl.} =
-  return kputsn(p, len(p).cint, s)
+  return kputsn(p, strlen(p), s)
 
-proc kputc*(c: cint; s: ptr kstring_t): cint {.inline, cdecl, discardable.} =
-  if s.L + 1 >= s.m:
-    var tmp: cstring
-    s.m = s.L + 2
-    kroundup32(s.m)
-    tmp = cast[cstring](realloc(s.s, s.m))
-    if (tmp != nil): s.s = tmp
-    else: return -1 # EOF
-  s.s[s.L] = c.char
-  inc(s.L)
-  s.s[s.L] = '\0'
+proc kputc*(c: cint; s: ptr kstring_t): cint {.inline, cdecl.} =
+  if ks_resize(s, s.l + 2) < 0: return EOF
+  s.s[inc(s.l)] = c
+  s.s[s.l] = 0
   return c
 
-proc kputc_z*(c: cint; s: ptr kstring_t): cint {.inline, cdecl.} =
-  if s.L + 1 > s.m:
-    var tmp: cstring
-    s.m = s.L + 1
-    kroundup32(s.m)
-    tmp = cast[cstring](realloc(s.s, s.m))
-    if (tmp != nil): s.s = tmp
-    else: return -1 # EOF
-  s.s[s.L] = c.char
-  inc(s.L)
+proc kputc_*(c: cint; s: ptr kstring_t): cint {.inline, cdecl.} =
+  if ks_resize(s, s.l + 1) < 0: return EOF
+  s.s[inc(s.l)] = c
   return 1
 
-#proc kputc*(c: char; s: ptr kstring_t): cint {.inline, discardable.} =
-#  return kputc(c.cint, s)
-
-proc kputsn_z*(p: pointer; l: cint; s: ptr kstring_t): cint {.inline, cdecl.} =
-  if s.L + l > s.m:
-    var tmp: cstring
-    s.m = s.L + l
-    kroundup32(s.m)
-    tmp = cast[cstring](realloc(s.s, s.m))
-    if (tmp != nil): s.s = tmp
-    else: return -1 # EOF
-  copyMem(cast[pointer](cast[ByteAddress](s.s) + s.L), cast[pointer](p), l)
-  inc(s.L, l)
+proc kputsn_*(p: pointer; l: cint; s: ptr kstring_t): cint {.inline, cdecl.} =
+  if ks_resize(s, s.l + l) < 0: return EOF
+  copyMem(s.s + s.l, p, l)
+  inc(s.l, l)
   return l
 
 proc kputw*(c: cint; s: ptr kstring_t): cint {.inline, cdecl.} =
@@ -169,32 +140,19 @@ proc kputw*(c: cint; s: ptr kstring_t): cint {.inline, cdecl.} =
   var
     i: cint
     l: cint
-    x: cuint
-  if c < 0:
-    x = cuint(-c)
-  else:
-    x = cuint(c)
+  var x: cuint
+  if c < 0: x = -x
   while true:
-    buf[l] = (x mod 10 + '0'.int).char
-    inc(l)
-    x = x div 10
-    if not (x > 0'u): break
-  if c < 0:
-    buf[l] = '-'
-    inc(l)
-  if s.L + l + 1 >= s.m:
-    var tmp: cstring
-    s.m = s.L + l + 2
-    kroundup32(s.m)
-    tmp = cast[cstring](realloc(s.s, s.m))
-    if (tmp != nil): s.s = tmp
-    else: return -1 # EOF
+    buf[inc(l)] = x mod 10 + '0'
+    x = x / 10
+    if not (x > 0): break
+  if c < 0: buf[inc(l)] = '-'
+  if ks_resize(s, s.l + l + 2) < 0: return EOF
   i = l - 1
   while i >= 0:
-    s.s[s.L] = buf[i]
-    inc(s.L)
+    s.s[inc(s.l)] = buf[i]
     dec(i)
-  s.s[s.L] = '\0'
+  s.s[s.l] = 0
   return 0
 
 proc kputuw*(c: cuint; s: ptr kstring_t): cint {.inline, cdecl.} =
@@ -202,27 +160,19 @@ proc kputuw*(c: cuint; s: ptr kstring_t): cint {.inline, cdecl.} =
   var
     l: cint
     i: cint
-    x: cuint
-  if c == 0: return kputc('0'.cint, s)
+  var x: cuint
+  if c == 0: return kputc('0', s)
   l = 0
   x = c
-  while x > 0'u:
-    buf[l] = (x mod 10 + '0'.int).char
-    inc(l)
-    x = x div 10
-  if s.L + l + 1 >= s.m:
-    var tmp: cstring
-    s.m = s.L + l + 2
-    kroundup32(s.m)
-    tmp = cast[cstring](realloc(s.s, s.m))
-    if (tmp != nil): s.s = tmp
-    else: return -1 # EOF
+  while x > 0:
+    buf[inc(l)] = x mod 10 + '0'
+    x = x / 10
+  if ks_resize(s, s.l + l + 2) < 0: return EOF
   i = l - 1
   while i >= 0:
-    s.s[s.L] = buf[i]
-    inc(s.L)
+    s.s[inc(s.l)] = buf[i]
     dec(i)
-  s.s[s.L] = '\0'
+  s.s[s.l] = 0
   return 0
 
 proc kputl*(c: clong; s: ptr kstring_t): cint {.inline, cdecl.} =
@@ -230,30 +180,19 @@ proc kputl*(c: clong; s: ptr kstring_t): cint {.inline, cdecl.} =
   var
     i: cint
     l: cint
-    x: culong
-  if c < 0: x = (-c).culong
-  else: x = c.culong
+  var x: culong
+  if c < 0: x = -x
   while true:
-    buf[l] = (x mod 10 + '0'.culong).char
-    inc(l)
-    x = x div 10
-    if not (x > 0'u): break
-  if c < 0:
-    buf[l] = '-'
-    inc(l)
-  if s.L + l + 1 >= s.m:
-    var tmp: cstring
-    s.m = s.L + l + 2
-    kroundup32(s.m)
-    tmp = cast[cstring](realloc(s.s, s.m))
-    if (tmp != nil): s.s = tmp
-    else: return -1 # EOF
+    buf[inc(l)] = x mod 10 + '0'
+    x = x / 10
+    if not (x > 0): break
+  if c < 0: buf[inc(l)] = '-'
+  if ks_resize(s, s.l + l + 2) < 0: return EOF
   i = l - 1
   while i >= 0:
-    s.s[s.L] = buf[i]
-    inc(s.L)
+    s.s[inc(s.l)] = buf[i]
     dec(i)
-  s.s[s.L] = '\0'
+  s.s[s.l] = 0
   return 0
 
 ##
@@ -267,3 +206,4 @@ proc ksplit*(s: ptr kstring_t; delimiter: cint; n: ptr cint): ptr cint {.inline,
     offsets: ptr cint
   n[] = ksplit_core(s.s, delimiter, addr(max), addr(offsets))
   return offsets
+

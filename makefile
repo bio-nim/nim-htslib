@@ -25,8 +25,15 @@ htslib-1.6.tar.bz2:
 HTSLIB_DIR=htslib-1.6
 cp:
 	for i in ${HEADERS}; do cp ${HTSLIB_DIR}/htslib/$$i inc/; done
+headers:
+	set -e; for i in $(patsubst %.h,%,${HEADERS}); do make header-$$i; perl -pi -e 's/\s+$$/\n/;' $$i.nim; mv -f $$i.nim src/htslib/; done
 header-%:
-	c2nim --header --cdecl inc/$*.h --out:$*.nim
+	c2nim --header --skipinclude --cdecl inc/prefix.c2nim inc/$*.h --out:foo
+	cat inc/prefix.txt > $*.nim
+	cat foo >> $*.nim
+	echo >> $*.nim # add newline
+	perl -pi -e 's{header:\s*"}{header: "htslib/}' $*.nim
+	rm -f foo
 full-%:
 	c2nim inc/$*.h --out:$*.nim
 clean:

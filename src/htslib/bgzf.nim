@@ -1,11 +1,11 @@
 # vim: sw=2 ts=2 sts=2 tw=80 et:
-# UNTESTED: This module might not work yet. ~cd
 {.passL: "-lhts".}
-##  The MIT License
+## / @file htslib/bgzf.h
+## / Low-level routines for direct BGZF operations.
 ##
 ##    Copyright (c) 2008 Broad Institute / Massachusetts Institute of Technology
 ##                  2011, 2012 Attractive Chaos <attractor@live.co.uk>
-##    Copyright (C) 2009, 2013, 2014 Genome Research Ltd
+##    Copyright (C) 2009, 2013, 2014,2017 Genome Research Ltd
 ##
 ##    Permission is hereby granted, free of charge, to any person obtaining a copy
 ##    of this software and associated documentation files (the "Software"), to deal
@@ -35,22 +35,30 @@ const
   BGZF_ERR_HEADER* = 2
   BGZF_ERR_IO* = 4
   BGZF_ERR_MISUSE* = 8
+  BGZF_ERR_MT* = 16
+  BGZF_ERR_CRC* = 32
 
 type
-  hFILE* {.importc: "hFILE", header: "htslib/bgzf.h".} = object
+  hFILE* {.importc: "hFILE", header: "htslib/bgzf.h", bycopy.} = object
 
-  bgzf_mtaux_t* {.importc: "bgzf_mtaux_t", header: "htslib/bgzf.h".} = object
+  hts_tpool* {.importc: "hts_tpool", header: "htslib/bgzf.h", bycopy.} = object
+
+  bgzf_mtaux_t* {.importc: "bgzf_mtaux_t", header: "htslib/bgzf.h", bycopy.} = object
 
   bgzidx_t* = __bgzidx_t
-  BGZF* {.importc: "BGZF", header: "htslib/bgzf.h".} = object
-    errcode* {.importc: "errcode".} {.bitsize: 16.}: cint
-    is_write* {.importc: "is_write".} {.bitsize: 2.}: cint
-    is_be* {.importc: "is_be".} {.bitsize: 2.}: cint
+  BGZF* {.importc: "BGZF", header: "htslib/bgzf.h", bycopy.} = object
+    errcode* {.importc: "errcode".} {.bitsize: 16.}: cuint ##  Reserved bits should be written as 0; read as "don't care"
+    reserved* {.importc: "reserved".} {.bitsize: 1.}: cuint
+    is_write* {.importc: "is_write".} {.bitsize: 1.}: cuint
+    no_eof_block* {.importc: "no_eof_block".} {.bitsize: 1.}: cuint
+    is_be* {.importc: "is_be".} {.bitsize: 1.}: cuint
     compress_level* {.importc: "compress_level".} {.bitsize: 9.}: cint
-    is_compressed* {.importc: "is_compressed".} {.bitsize: 2.}: cint
-    is_gzip* {.importc: "is_gzip".} {.bitsize: 1.}: cint
+    last_block_eof* {.importc: "last_block_eof".} {.bitsize: 1.}: cuint
+    is_compressed* {.importc: "is_compressed".} {.bitsize: 1.}: cuint
+    is_gzip* {.importc: "is_gzip".} {.bitsize: 1.}: cuint
     cache_size* {.importc: "cache_size".}: cint
     block_length* {.importc: "block_length".}: cint
+    block_clength* {.importc: "block_clength".}: cint
     block_offset* {.importc: "block_offset".}: cint
     block_address* {.importc: "block_address".}: int64_t
     uncompressed_address* {.importc: "uncompressed_address".}: int64_t
@@ -68,7 +76,7 @@ when not defined(HTS_BGZF_TYPEDEF):
   const
     HTS_BGZF_TYPEDEF* = true
 type
-  kstring_t* {.importc: "kstring_t", header: "htslib/bgzf.h".} = object
+  kstring_t* {.importc: "kstring_t", header: "htslib/bgzf.h", bycopy.} = object
     l* {.importc: "l".}: csize
     m* {.importc: "m".}: csize
     s* {.importc: "s".}: cstring
@@ -81,6 +89,9 @@ type
 ##  Open an existing file descriptor for reading or writing.
 ##
 ##  @param fd    file descriptor
+##               Note that the file must be opened in binary mode, or else
+##               there will be problems on platforms that make a difference
+##               between text and binary mode.
 ##  @param mode  mode matching /[rwag][u0-9]+/: 'r' for reading, 'w' for
 ##               writing, 'a' for appending, 'g' for gzip rather than BGZF
 ##               compression (with 'w' only), and digit specifies the zlib
@@ -93,10 +104,8 @@ type
 
 proc bgzf_dopen*(fd: cint; mode: cstring): ptr BGZF {.cdecl, importc: "bgzf_dopen",
     header: "htslib/bgzf.h".}
-
-var bgzf_fdopen* = bgzf_dopen
-#template bgzf_fdopen*(fd, mode: untyped): untyped =
-#  bgzf_dopen((fd), (mode))     ##  for backward compatibility
+template bgzf_fdopen*(fd, mode: untyped): untyped =
+  bgzf_dopen((fd), (mode))     ##  for backward compatibility
 
 ## *
 ##  Open the specified file for reading or writing.
@@ -142,6 +151,19 @@ proc bgzf_read*(fp: ptr BGZF; data: pointer; length: csize): ssize_t {.cdecl,
 proc bgzf_write*(fp: ptr BGZF; data: pointer; length: csize): ssize_t {.cdecl,
     importc: "bgzf_write", header: "htslib/bgzf.h".}
 ## *
+##  Write _length_ bytes from _data_ to the file, the index will be used to
+##  decide the amount of uncompressed data to be writen to each bgzip block.
+##  If no I/O errors occur, the complete _length_ bytes will be written (or
+##  queued for writing).
+##  @param fp     BGZF file handler
+##  @param data   data array to write
+##  @param length size of data to write
+##  @return       number of bytes written (i.e., _length_); negative on error
+##
+
+proc bgzf_block_write*(fp: ptr BGZF; data: pointer; length: csize): ssize_t {.cdecl,
+    importc: "bgzf_block_write", header: "htslib/bgzf.h".}
+## *
 ##  Read up to _length_ bytes directly from the underlying stream without
 ##  decompressing.  Bypasses BGZF blocking, so must be used with care in
 ##  specialised circumstances only.
@@ -169,6 +191,9 @@ proc bgzf_raw_write*(fp: ptr BGZF; data: pointer; length: csize): ssize_t {.cdec
     importc: "bgzf_raw_write", header: "htslib/bgzf.h".}
 ## *
 ##  Write the data in the buffer to the file.
+##
+##  @param fp     BGZF file handle
+##  @return       0 on success and -1 on error
 ##
 
 proc bgzf_flush*(fp: ptr BGZF): cint {.cdecl, importc: "bgzf_flush", header: "htslib/bgzf.h".}
@@ -205,6 +230,19 @@ proc bgzf_seek*(fp: ptr BGZF; pos: int64_t; whence: cint): int64_t {.cdecl,
 
 proc bgzf_check_EOF*(fp: ptr BGZF): cint {.cdecl, importc: "bgzf_check_EOF",
                                       header: "htslib/bgzf.h".}
+## * Return the file's compression format
+##
+##  @param fp  BGZF file handle
+##  @return    A small integer matching the corresponding
+##             `enum htsCompression` value:
+##    - 0 / `no_compression` if the file is uncompressed
+##    - 1 / `gzip` if the file is plain GZIP-compressed
+##    - 2 / `bgzf` if the file is BGZF-compressed
+##  @since 1.4
+##
+
+proc bgzf_compression*(fp: ptr BGZF): cint {.cdecl, importc: "bgzf_compression",
+                                        header: "htslib/bgzf.h".}
 ## *
 ##  Check if a file is in the BGZF format
 ##
@@ -246,7 +284,7 @@ proc bgzf_getc*(fp: ptr BGZF): cint {.cdecl, importc: "bgzf_getc", header: "htsl
 ##  @param fp     BGZF file handler
 ##  @param delim  delimitor
 ##  @param str    string to write to; must be initialized
-##  @return       length of the string; 0 on end-of-file; negative on error
+##  @return       length of the string; -1 on end-of-file; <= -2 on error
 ##
 
 proc bgzf_getline*(fp: ptr BGZF; delim: cint; str: ptr kstring_t): cint {.cdecl,
@@ -258,8 +296,19 @@ proc bgzf_getline*(fp: ptr BGZF; delim: cint; str: ptr kstring_t): cint {.cdecl,
 proc bgzf_read_block*(fp: ptr BGZF): cint {.cdecl, importc: "bgzf_read_block",
                                        header: "htslib/bgzf.h".}
 ## *
-##  Enable multi-threading (only effective on writing and when the
-##  library was compiled with -DBGZF_MT)
+##  Enable multi-threading (when compiled with -DBGZF_MT) via a shared
+##  thread pool.  This means both encoder and decoder can balance
+##  usage across a single pool of worker jobs.
+##
+##  @param fp          BGZF file handler; must be opened for writing
+##  @param pool        The thread pool (see hts_create_threads)
+##
+
+proc bgzf_thread_pool*(fp: ptr BGZF; pool: ptr hts_tpool; qsize: cint): cint {.cdecl,
+    importc: "bgzf_thread_pool", header: "htslib/bgzf.h".}
+## *
+##  Enable multi-threading (only effective when the library was compiled
+##  with -DBGZF_MT)
 ##
 ##  @param fp          BGZF file handler; must be opened for writing
 ##  @param n_threads   #threads used for writing
@@ -268,6 +317,20 @@ proc bgzf_read_block*(fp: ptr BGZF): cint {.cdecl, importc: "bgzf_read_block",
 
 proc bgzf_mt*(fp: ptr BGZF; n_threads: cint; n_sub_blks: cint): cint {.cdecl,
     importc: "bgzf_mt", header: "htslib/bgzf.h".}
+## *
+##  Compress a single BGZF block.
+##
+##  @param dst    output buffer (must have size >= BGZF_MAX_BLOCK_SIZE)
+##  @param dlen   size of output buffer; updated on return to the number
+##                of bytes actually written to dst
+##  @param src    buffer to be compressed
+##  @param slen   size of data to compress (must be <= BGZF_BLOCK_SIZE)
+##  @param level  compression level
+##  @return       0 on success and negative on error
+##
+
+proc bgzf_compress*(dst: pointer; dlen: ptr csize; src: pointer; slen: csize; level: cint): cint {.
+    cdecl, importc: "bgzf_compress", header: "htslib/bgzf.h".}
 ## ******************
 ##  bgzidx routines *
 ## *****************
@@ -302,27 +365,57 @@ proc bgzf_utell*(fp: ptr BGZF): clong {.cdecl, importc: "bgzf_utell", header: "h
 
 proc bgzf_index_build_init*(fp: ptr BGZF): cint {.cdecl,
     importc: "bgzf_index_build_init", header: "htslib/bgzf.h".}
+## / Load BGZF index
 ## *
-##  Load BGZF index
-##
 ##  @param fp          BGZF file handler
 ##  @param bname       base name
 ##  @param suffix      suffix to add to bname (can be NULL)
-##
-##  Returns 0 on success and -1 on error.
+##  @return 0 on success and -1 on error.
 ##
 
 proc bgzf_index_load*(fp: ptr BGZF; bname: cstring; suffix: cstring): cint {.cdecl,
     importc: "bgzf_index_load", header: "htslib/bgzf.h".}
+## / Load BGZF index from an hFILE
 ## *
-##  Save BGZF index
+##  @param fp   BGZF file handle
+##  @param idx  hFILE to read from
+##  @param name file name (for error reporting only; can be NULL)
+##  @return 0 on success and -1 on error.
 ##
+##  Populates @p fp with index data read from the hFILE handle @p idx.
+##  The file pointer to @idx should point to the start of the index
+##  data when this function is called.
+##
+##  The file name can optionally be passed in the @p name parameter.  This
+##  is only used for printing error messages; if NULL the word "index" is
+##  used instead.
+##
+
+proc bgzf_index_load_hfile*(fp: ptr BGZF; idx: ptr hFILE; name: cstring): cint {.cdecl,
+    importc: "bgzf_index_load_hfile", header: "htslib/bgzf.h".}
+## / Save BGZF index
+## *
 ##  @param fp          BGZF file handler
 ##  @param bname       base name
 ##  @param suffix      suffix to add to bname (can be NULL)
-##
-##  Returns 0 on success and -1 on error.
+##  @return 0 on success and -1 on error.
 ##
 
 proc bgzf_index_dump*(fp: ptr BGZF; bname: cstring; suffix: cstring): cint {.cdecl,
     importc: "bgzf_index_dump", header: "htslib/bgzf.h".}
+## / Write a BGZF index to an hFILE
+## *
+##  @param fp     BGZF file handle
+##  @param idx    hFILE to write to
+##  @param name   file name (for error reporting only, can be NULL)
+##  @return 0 on success and -1 on error.
+##
+##  Write index data from @p fp to the file @p idx.
+##
+##  The file name can optionally be passed in the @p name parameter.  This
+##  is only used for printing error messages; if NULL the word "index" is
+##  used instead.
+##
+
+proc bgzf_index_dump_hfile*(fp: ptr BGZF; idx: ptr hFILE; name: cstring): cint {.cdecl,
+    importc: "bgzf_index_dump_hfile", header: "htslib/bgzf.h".}
