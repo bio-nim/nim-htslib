@@ -2,7 +2,3 @@
 	path = repos/htslib
 	url = git://github.com/samtools/htslib
 	ignore = dirty
-[submodule "repos/pbbam"]
-	path = repos/pbbam
-	url = https://github.com/PacificBiosciences/pbbam
-	ignore = dirty
