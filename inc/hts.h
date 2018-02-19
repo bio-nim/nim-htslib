@@ -252,8 +252,6 @@ typedef struct hts_opt {
     struct hts_opt *next;
 } hts_opt;
 
-#define HTS_FILE_OPTS_INIT {{0},0}
-
 /**********************
  * Exported functions *
  **********************/

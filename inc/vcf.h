@@ -345,6 +345,7 @@ typedef struct {
      *  to call the function repeatedly, it will not unpack the same field
      *  twice.
      */
+#ifdef C2NIM
     #define BCF_UN_STR  1       // up to ALT inclusive
     #define BCF_UN_FLT  2       // up to FILTER
     #define BCF_UN_INFO 4       // up to INFO
@@ -352,6 +353,7 @@ typedef struct {
     #define BCF_UN_FMT  8                           // unpack format and each sample
     #define BCF_UN_IND  BCF_UN_FMT                  // a synonymo of BCF_UN_FMT
     #define BCF_UN_ALL  (BCF_UN_SHR|BCF_UN_FMT)     // everything
+#endif
     int bcf_unpack(bcf1_t *b, int which);
 
     /*
@@ -595,10 +597,12 @@ typedef struct {
      *
      *  Returns 0 on success or negative value on error.
      */
+#ifndef C2NIM
     #define bcf_update_format_int32(hdr,line,key,values,n) bcf_update_format((hdr),(line),(key),(values),(n),BCF_HT_INT)
     #define bcf_update_format_float(hdr,line,key,values,n) bcf_update_format((hdr),(line),(key),(values),(n),BCF_HT_REAL)
     #define bcf_update_format_char(hdr,line,key,values,n) bcf_update_format((hdr),(line),(key),(values),(n),BCF_HT_STR)
     #define bcf_update_genotypes(hdr,line,gts,n) bcf_update_format((hdr),(line),"GT",(gts),(n),BCF_HT_INT)     // See bcf_gt_ macros below
+#endif
     int bcf_update_format_string(const bcf_hdr_t *hdr, bcf1_t *line, const char *key, const char **values, int n);
     int bcf_update_format(const bcf_hdr_t *hdr, bcf1_t *line, const char *key, const void *values, int n, int type);
 

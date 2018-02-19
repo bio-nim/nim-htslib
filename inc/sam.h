@@ -84,7 +84,9 @@ typedef struct {
 // the array look-up will not fall off the end.  '?' is chosen as the
 // padding character so it's easy to spot if one is emitted, and will
 // result in a parsing failure (in sam_parse1(), at least) if read.
+#ifndef C2NIM
 #define bam_cigar_opchr(c) (BAM_CIGAR_STR "??????" [bam_cigar_op(c)])
+#endif
 #define bam_cigar_gen(l, o) ((l)<<BAM_CIGAR_SHIFT|(o))
 
 /* bam_cigar_type returns a bit flag with:
@@ -189,9 +191,9 @@ typedef struct {
     int l_data;
     uint32_t m_data;
     uint8_t *data;
-#ifndef BAM_NO_ID
+//#ifndef BAM_NO_ID
     uint64_t id;
-#endif
+//#endif
 } bam1_t;
 
 /*! @function
