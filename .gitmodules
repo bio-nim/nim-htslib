@@ -1,4 +1,6 @@
 [submodule "repos/htslib"]
 	path = repos/htslib
-	url = git://github.com/samtools/htslib
+	#url = git://github.com/samtools/htslib
+	url = https://github.com/bio-nim/htslib
 	ignore = dirty
+	branch = dev
